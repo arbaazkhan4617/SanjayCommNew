@@ -1,0 +1,60 @@
+package com.integrators.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductResponseDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private BigDecimal price;
+    private BigDecimal originalPrice;
+    private Boolean inStock;
+    private Double rating;
+    private Integer reviews;
+    private String image;
+    private Map<String, String> specifications;
+    private ModelInfoDTO model;
+    private BrandInfoDTO brand;
+    private CategoryInfoDTO category;
+    private ServiceInfoDTO service;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ModelInfoDTO {
+        private Long id;
+        private String name;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BrandInfoDTO {
+        private Long id;
+        private String name;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryInfoDTO {
+        private Long id;
+        private String name;
+    }
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ServiceInfoDTO {
+        private Long id;
+        private String name;
+    }
+}

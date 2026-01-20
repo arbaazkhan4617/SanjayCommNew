@@ -1,0 +1,102 @@
+package com.integrators.service;
+
+import com.integrators.dto.CartItemDTO;
+import com.integrators.dto.ProductDTO;
+import com.integrators.entity.CartItem;
+import com.integrators.entity.Product;
+import com.integrators.entity.User;
+import com.integrators.repository.CartItemRepository;
+import com.integrators.repository.ProductRepository;
+import com.integrators.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CartService {
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+
+    public List<CartItemDTO> getCartItems(Long userId) {
+        return cartItemRepository.findByUserId(userId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CartItemDTO addToCart(Long userId, Long productId, Integer quantity) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        CartItem cartItem = cartItemRepository.findByUserIdAndProductId(userId, productId)
+                .orElse(null);
+
+        if (cartItem != null) {
+            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+        } else {
+            cartItem = new CartItem();
+            cartItem.setUser(user);
+            cartItem.setProduct(product);
+            cartItem.setQuantity(quantity);
+        }
+
+        cartItem = cartItemRepository.save(cartItem);
+        return convertToDTO(cartItem);
+    }
+
+    @Transactional
+    public CartItemDTO updateCartItem(Long userId, Long cartItemId, Integer quantity) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+
+        if (!cartItem.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        cartItem.setQuantity(quantity);
+        cartItem = cartItemRepository.save(cartItem);
+        return convertToDTO(cartItem);
+    }
+
+    @Transactional
+    public void removeFromCart(Long userId, Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+
+        if (!cartItem.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        cartItemRepository.delete(cartItem);
+    }
+
+    @Transactional
+    public void clearCart(Long userId) {
+        cartItemRepository.deleteByUserId(userId);
+    }
+
+    private CartItemDTO convertToDTO(CartItem cartItem) {
+        Product product = cartItem.getProduct();
+        ProductDTO productDTO = new ProductDTO(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getOriginalPrice(),
+                product.getInStock(),
+                product.getRating(),
+                product.getReviews(),
+                product.getModel().getId(),
+                product.getSpecifications()
+        );
+
+        return new CartItemDTO(cartItem.getId(), productDTO, cartItem.getQuantity());
+    }
+}

@@ -1,0 +1,229 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
+import { COLORS } from '../utils/constants';
+
+const ProfileScreen = () => {
+  const navigation = useNavigation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const menuItems = [
+    {
+      id: '1',
+      title: 'My Orders',
+      icon: 'receipt-outline',
+      onPress: () => navigation.navigate('Orders'),
+    },
+    {
+      id: '2',
+      title: 'Addresses',
+      icon: 'location-outline',
+      onPress: () => {
+        // TODO: Navigate to addresses screen
+      },
+    },
+    {
+      id: '3',
+      title: 'Payment Methods',
+      icon: 'card-outline',
+      onPress: () => {
+        // TODO: Navigate to payment methods screen
+      },
+    },
+    {
+      id: '4',
+      title: 'Notifications',
+      icon: 'notifications-outline',
+      onPress: () => {
+        // TODO: Navigate to notifications screen
+      },
+    },
+    {
+      id: '5',
+      title: 'Help & Support',
+      icon: 'help-circle-outline',
+      onPress: () => {
+        // TODO: Navigate to help screen
+      },
+    },
+    {
+      id: '6',
+      title: 'About',
+      icon: 'information-circle-outline',
+      onPress: () => {
+        // TODO: Navigate to about screen
+      },
+    },
+  ];
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* User Info */}
+        <View style={styles.userSection}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={40} color={COLORS.primary} />
+          </View>
+          <Text style={styles.userName}>{user?.name || 'User'}</Text>
+          <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
+          <Text style={styles.userPhone}>{user?.phone || '+91-9179500312'}</Text>
+        </View>
+
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.menuItem}
+              onPress={item.onPress}
+            >
+              <View style={styles.menuItemLeft}>
+                <Ionicons name={item.icon} size={24} color={COLORS.text} />
+                <Text style={styles.menuItemText}>{item.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color={COLORS.error} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        {/* App Info */}
+        <View style={styles.appInfo}>
+          <Text style={styles.appName}>Integrators</Text>
+          <Text style={styles.appVersion}>Version 1.0.0</Text>
+          <Text style={styles.appTagline}>Secure. Smart. Connected.</Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  userSection: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: COLORS.background,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginBottom: 4,
+  },
+  userPhone: {
+    fontSize: 14,
+    color: COLORS.textLight,
+  },
+  menuSection: {
+    backgroundColor: COLORS.background,
+    marginTop: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: COLORS.text,
+    marginLeft: 16,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    margin: 16,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.error,
+    borderRadius: 8,
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.error,
+    marginLeft: 8,
+  },
+  appInfo: {
+    alignItems: 'center',
+    padding: 24,
+    marginBottom: 16,
+  },
+  appName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  appVersion: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginBottom: 4,
+  },
+  appTagline: {
+    fontSize: 12,
+    color: COLORS.textLight,
+  },
+});
+
+export default ProfileScreen;

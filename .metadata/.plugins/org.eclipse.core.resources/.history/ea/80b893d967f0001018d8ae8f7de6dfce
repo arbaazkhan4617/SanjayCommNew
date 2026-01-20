@@ -1,0 +1,135 @@
+package com.integrators.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.integrators.dto.BrandDTO;
+import com.integrators.dto.ModelDTO;
+import com.integrators.dto.ProductCategoryDTO;
+import com.integrators.dto.ProductResponseDTO;
+import com.integrators.dto.ServiceDTO;
+import com.integrators.entity.Brand;
+import com.integrators.entity.Model;
+import com.integrators.entity.Product;
+import com.integrators.entity.ProductCategory;
+import com.integrators.repository.BrandRepository;
+import com.integrators.repository.ModelRepository;
+import com.integrators.repository.ProductCategoryRepository;
+import com.integrators.repository.ProductRepository;
+import com.integrators.repository.ServiceRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ProductService {
+	private final ServiceRepository serviceRepository;
+	private final ProductCategoryRepository categoryRepository;
+	private final BrandRepository brandRepository;
+	private final ModelRepository modelRepository;
+	private final ProductRepository productRepository;
+
+	public ProductService(ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository,
+			BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository) {
+		super();
+		this.serviceRepository = serviceRepository;
+		this.categoryRepository = categoryRepository;
+		this.brandRepository = brandRepository;
+		this.modelRepository = modelRepository;
+		this.productRepository = productRepository;
+	}
+
+	public List<ServiceDTO> getAllServices() {
+		return serviceRepository.findAll().stream().map(this::convertToServiceDTO).collect(Collectors.toList());
+	}
+
+	public ServiceDTO getServiceById(Long id) {
+		return serviceRepository.findById(id).map(this::convertToServiceDTO)
+				.orElseThrow(() -> new RuntimeException("Service not found"));
+	}
+
+	public List<ProductCategoryDTO> getCategoriesByServiceId(Long serviceId) {
+		return categoryRepository.findByServiceId(serviceId).stream().map(this::convertToCategoryDTO)
+				.collect(Collectors.toList());
+	}
+
+	public List<BrandDTO> getBrandsByCategoryId(Long categoryId) {
+		return brandRepository.findByCategoryId(categoryId).stream().map(this::convertToBrandDTO)
+				.collect(Collectors.toList());
+	}
+
+	public List<ModelDTO> getModelsByBrandId(Long brandId) {
+		return modelRepository.findByBrandId(brandId).stream().map(this::convertToModelDTO)
+				.collect(Collectors.toList());
+	}
+
+	public ProductResponseDTO getProductByModelId(Long modelId) {
+		Product product = productRepository.findByModelId(modelId)
+				.orElseThrow(() -> new RuntimeException("Product not found"));
+		return convertToProductResponseDTO(product);
+	}
+
+	public List<ProductResponseDTO> searchProducts(String query) {
+		return productRepository.searchProducts(query).stream().map(this::convertToProductResponseDTO)
+				.collect(Collectors.toList());
+	}
+
+	public List<ProductResponseDTO> getAllProducts() {
+		return productRepository.findAll().stream().map(this::convertToProductResponseDTO).collect(Collectors.toList());
+	}
+
+	// Conversion methods
+	private ServiceDTO convertToServiceDTO(Service service) {
+		return new ServiceDTO(service.getId(), service.getName(), service.getIcon(), service.getDescription());
+	}
+
+	private ProductCategoryDTO convertToCategoryDTO(ProductCategory category) {
+		return new ProductCategoryDTO(category.getId(), category.getName(), category.getService().getId());
+	}
+
+	private BrandDTO convertToBrandDTO(Brand brand) {
+		return new BrandDTO(brand.getId(), brand.getName(), brand.getCategory().getId());
+	}
+
+	private ModelDTO convertToModelDTO(Model model) {
+		return new ModelDTO(model.getId(), model.getName(), model.getImage(), model.getBrand().getId());
+	}
+
+	private ProductResponseDTO convertToProductResponseDTO(Product product) {
+		ProductResponseDTO dto = new ProductResponseDTO();
+		dto.setId(product.getId());
+		dto.setName(product.getName());
+		dto.setDescription(product.getDescription());
+		dto.setPrice(product.getPrice());
+		dto.setOriginalPrice(product.getOriginalPrice());
+		dto.setInStock(product.getInStock());
+		dto.setRating(product.getRating());
+		dto.setReviews(product.getReviews());
+		dto.setSpecifications(product.getSpecifications());
+
+		Model model = product.getModel();
+		if (model != null) {
+			dto.setImage(model.getImage());
+			dto.setModel(new ProductResponseDTO.ModelInfoDTO(model.getId(), model.getName()));
+
+			Brand brand = model.getBrand();
+			if (brand != null) {
+				dto.setBrand(new ProductResponseDTO.BrandInfoDTO(brand.getId(), brand.getName()));
+
+				ProductCategory category = brand.getCategory();
+				if (category != null) {
+					dto.setCategory(new ProductResponseDTO.CategoryInfoDTO(category.getId(), category.getName()));
+
+					Categor service = category.getService();
+					if (service != null) {
+						dto.setService(new ProductResponseDTO.ServiceInfoDTO(service.getId(), service.getName()));
+					}
+				}
+			}
+		}
+
+		return dto;
+	}
+}

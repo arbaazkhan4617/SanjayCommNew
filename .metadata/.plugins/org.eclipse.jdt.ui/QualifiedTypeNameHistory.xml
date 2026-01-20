@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.integrators.controller.CartController"/>
+    <fullyQualifiedTypeName name="com.integrators.service.CartService"/>
+    <fullyQualifiedTypeName name="com.integrators.service.OrderService"/>
+    <fullyQualifiedTypeName name="com.integrators.service.ProductService"/>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Service"/>
+    <fullyQualifiedTypeName name="com.integrators.entity.Service"/>
+</qualifiedTypeNameHistroy>

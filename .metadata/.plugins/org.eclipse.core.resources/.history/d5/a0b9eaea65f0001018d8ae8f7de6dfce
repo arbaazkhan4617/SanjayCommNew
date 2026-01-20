@@ -1,0 +1,37 @@
+package com.integrators.controller;
+
+import com.integrators.dto.OrderDTO;
+import com.integrators.service.OrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/orders")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+public class OrderController {
+    private final OrderService orderService;
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<OrderDTO>> getUserOrders(@PathVariable Long userId) {
+        return ResponseEntity.ok(orderService.getUserOrders(userId));
+    }
+
+    @GetMapping("/{userId}/{orderId}")
+    public ResponseEntity<OrderDTO> getOrderById(
+            @PathVariable Long userId,
+            @PathVariable Long orderId) {
+        return ResponseEntity.ok(orderService.getOrderById(orderId, userId));
+    }
+
+    @PostMapping("/{userId}/create")
+    public ResponseEntity<OrderDTO> createOrder(
+            @PathVariable Long userId,
+            @RequestParam String shippingAddress,
+            @RequestParam String paymentMethod) {
+        return ResponseEntity.ok(orderService.createOrder(userId, shippingAddress, paymentMethod));
+    }
+}

@@ -1,0 +1,9 @@
+target/
+.idea/
+*.iml
+*.class
+.git/
+.gitignore
+README.md
+.env
+*.log

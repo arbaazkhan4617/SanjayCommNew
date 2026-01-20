@@ -1,0 +1,91 @@
+package com.integrators.dto;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private BigDecimal price;
+    private BigDecimal originalPrice;
+    private Boolean inStock;
+    private Double rating;
+    private Integer reviews;
+    private Long modelId;
+    private Map<String, String> specifications;
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public BigDecimal getPrice() {
+		return price;
+	}
+	public void setPrice(BigDecimal price) {
+		this.price = price;
+	}
+	public BigDecimal getOriginalPrice() {
+		return originalPrice;
+	}
+	public void setOriginalPrice(BigDecimal originalPrice) {
+		this.originalPrice = originalPrice;
+	}
+	public Boolean getInStock() {
+		return inStock;
+	}
+	public void setInStock(Boolean inStock) {
+		this.inStock = inStock;
+	}
+	public Double getRating() {
+		return rating;
+	}
+	public void setRating(Double rating) {
+		this.rating = rating;
+	}
+
+	public Integer getReviews() {
+		return reviews;
+	}
+
+	public void setReviews(Integer reviews) {
+		this.reviews = reviews;
+	}
+
+	public Long getModelId() {
+		return modelId;
+	}
+
+	public void setModelId(Long modelId) {
+		this.modelId = modelId;
+	}
+
+	public Map<String, String> getSpecifications() {
+		return specifications;
+	}
+
+	public void setSpecifications(Map<String, String> specifications) {
+		this.specifications = specifications;
+	}
+
+}

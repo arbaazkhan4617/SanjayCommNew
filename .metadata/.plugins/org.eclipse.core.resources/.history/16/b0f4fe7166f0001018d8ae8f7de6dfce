@@ -1,0 +1,114 @@
+package com.integrators.service;
+
+import com.integrators.dto.OrderDTO;
+import com.integrators.dto.ProductDTO;
+import com.integrators.entity.*;
+import com.integrators.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final CartItemRepository cartItemRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+
+    public List<OrderDTO> getUserOrders(Long userId) {
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public OrderDTO getOrderById(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        return convertToDTO(order);
+    }
+
+    @Transactional
+    public OrderDTO createOrder(Long userId, String shippingAddress, String paymentMethod) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setShippingAddress(shippingAddress);
+        order.setPaymentMethod(paymentMethod);
+        order.setStatus(Order.OrderStatus.PENDING);
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (CartItem cartItem : cartItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(cartItem.getProduct().getPrice());
+            order.getOrderItems().add(orderItem);
+            total = total.add(cartItem.getProduct().getPrice()
+                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+        }
+
+        order.setTotal(total);
+        order = orderRepository.save(order);
+
+        // Clear cart after order creation
+        cartItemRepository.deleteByUserId(userId);
+
+        return convertToDTO(order);
+    }
+
+    private OrderDTO convertToDTO(Order order) {
+        List<OrderDTO.OrderItemDTO> orderItemDTOs = order.getOrderItems().stream()
+                .map(item -> {
+                    Product product = item.getProduct();
+                    ProductDTO productDTO = new ProductDTO(
+                            product.getId(),
+                            product.getName(),
+                            product.getDescription(),
+                            product.getPrice(),
+                            product.getOriginalPrice(),
+                            product.getInStock(),
+                            product.getRating(),
+                            product.getReviews(),
+                            product.getModel().getId(),
+                            product.getSpecifications()
+                    );
+
+                    return new OrderDTO.OrderItemDTO(
+                            item.getId(),
+                            productDTO,
+                            item.getQuantity(),
+                            item.getPrice()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return new OrderDTO(
+                order.getId(),
+                orderItemDTOs,
+                order.getTotal(),
+                order.getStatus().name(),
+                order.getShippingAddress(),
+                order.getPaymentMethod(),
+                order.getCreatedAt()
+        );
+    }
+}

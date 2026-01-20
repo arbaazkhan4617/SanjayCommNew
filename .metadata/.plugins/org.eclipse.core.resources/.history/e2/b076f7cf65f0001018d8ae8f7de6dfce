@@ -1,0 +1,52 @@
+package com.integrators.controller;
+
+import com.integrators.dto.CartItemDTO;
+import com.integrators.service.CartService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/cart")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+public class CartController {
+    private final CartService cartService;
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<CartItemDTO>> getCartItems(@PathVariable Long userId) {
+        return ResponseEntity.ok(cartService.getCartItems(userId));
+    }
+
+    @PostMapping("/{userId}/add")
+    public ResponseEntity<CartItemDTO> addToCart(
+            @PathVariable Long userId,
+            @RequestParam Long productId,
+            @RequestParam(defaultValue = "1") Integer quantity) {
+        return ResponseEntity.ok(cartService.addToCart(userId, productId, quantity));
+    }
+
+    @PutMapping("/{userId}/items/{cartItemId}")
+    public ResponseEntity<CartItemDTO> updateCartItem(
+            @PathVariable Long userId,
+            @PathVariable Long cartItemId,
+            @RequestParam Integer quantity) {
+        return ResponseEntity.ok(cartService.updateCartItem(userId, cartItemId, quantity));
+    }
+
+    @DeleteMapping("/{userId}/items/{cartItemId}")
+    public ResponseEntity<Void> removeFromCart(
+            @PathVariable Long userId,
+            @PathVariable Long cartItemId) {
+        cartService.removeFromCart(userId, cartItemId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{userId}/clear")
+    public ResponseEntity<Void> clearCart(@PathVariable Long userId) {
+        cartService.clearCart(userId);
+        return ResponseEntity.noContent().build();
+    }
+}
