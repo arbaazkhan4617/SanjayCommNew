@@ -73,8 +73,21 @@ public class DataSeeder implements CommandLineRunner {
         
         // If counts don't match, seed (idempotent methods will skip existing items)
         System.out.println("Counts don't match expected values. Seeding missing data...");
+        System.out.println("Missing items:");
+        if (serviceCount < EXPECTED_SERVICES) System.out.println("  - Services: " + (EXPECTED_SERVICES - serviceCount) + " missing");
+        if (categoryCount < EXPECTED_CATEGORIES) System.out.println("  - Categories: " + (EXPECTED_CATEGORIES - categoryCount) + " missing");
+        if (brandCount < EXPECTED_BRANDS) System.out.println("  - Brands: " + (EXPECTED_BRANDS - brandCount) + " missing");
+        if (modelCount < EXPECTED_MODELS) System.out.println("  - Models: " + (EXPECTED_MODELS - modelCount) + " missing");
+        if (productCount < EXPECTED_PRODUCTS) System.out.println("  - Products: " + (EXPECTED_PRODUCTS - productCount) + " missing");
         System.out.println("This may take a few moments...");
-        seedData();
+        
+        try {
+            seedData();
+        } catch (Exception e) {
+            System.err.println("ERROR during seeding: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("Continuing despite error...");
+        }
         
         // Verify final counts
         long finalServiceCount = serviceRepository.count();
@@ -181,16 +194,35 @@ public class DataSeeder implements CommandLineRunner {
         // GPS Devices
         ProductCategory gpsDevices = createCategory("GPS Devices for Vehicles", salesService);
 
-        // Seed all products
-        seedIPHDSystems(ipHdSystems);
-        seedAnalogHDSystems(analogHdSystems);
-        seedConventionalFireAlarms(conventionalFireAlarms);
-        seedAddressableFireAlarms(addressableFireAlarms);
-        seedBiometrics(biometrics);
-        seedAnalogueVDP(analogueVDP);
-        seedIPVDP(ipVDP);
-        seedElectronicLocks(electronicLocks);
-        seedGPSDevices(gpsDevices);
+        // Seed all products - wrap each in try-catch to continue even if one fails
+        System.out.println("Starting to seed IP HD Systems...");
+        try { seedIPHDSystems(ipHdSystems); } catch (Exception e) { System.err.println("Error seeding IP HD Systems: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Analog HD Systems...");
+        try { seedAnalogHDSystems(analogHdSystems); } catch (Exception e) { System.err.println("Error seeding Analog HD Systems: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Conventional Fire Alarms...");
+        try { seedConventionalFireAlarms(conventionalFireAlarms); } catch (Exception e) { System.err.println("Error seeding Conventional Fire Alarms: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Addressable Fire Alarms...");
+        try { seedAddressableFireAlarms(addressableFireAlarms); } catch (Exception e) { System.err.println("Error seeding Addressable Fire Alarms: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Biometrics...");
+        try { seedBiometrics(biometrics); } catch (Exception e) { System.err.println("Error seeding Biometrics: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Analogue VDP...");
+        try { seedAnalogueVDP(analogueVDP); } catch (Exception e) { System.err.println("Error seeding Analogue VDP: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed IP VDP...");
+        try { seedIPVDP(ipVDP); } catch (Exception e) { System.err.println("Error seeding IP VDP: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed Electronic Locks...");
+        try { seedElectronicLocks(electronicLocks); } catch (Exception e) { System.err.println("Error seeding Electronic Locks: " + e.getMessage()); }
+        
+        System.out.println("Starting to seed GPS Devices...");
+        try { seedGPSDevices(gpsDevices); } catch (Exception e) { System.err.println("Error seeding GPS Devices: " + e.getMessage()); }
+        
+        System.out.println("All seed methods completed.");
     }
 
     private Service createService(String name, String icon, String description) {
