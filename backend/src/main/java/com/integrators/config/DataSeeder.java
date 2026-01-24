@@ -37,17 +37,23 @@ public class DataSeeder implements CommandLineRunner {
         // Always seed users (check separately)
         seedDefaultUsers();
         
-        // Seed products only if database is empty
+        // Seed products only if products don't exist (check products, not services)
+        long productCount = productRepository.count();
         long serviceCount = serviceRepository.count();
-        System.out.println("Current services in database: " + serviceCount);
+        long categoryCount = categoryRepository.count();
         
-        if (serviceCount > 0) {
+        System.out.println("Current database counts:");
+        System.out.println("  Services: " + serviceCount);
+        System.out.println("  Categories: " + categoryCount);
+        System.out.println("  Products: " + productCount);
+        
+        if (productCount > 0) {
             System.out.println("Products already seeded. Skipping product seeding...");
             System.out.println("========================================");
             return;
         }
 
-        System.out.println("Database is empty. Seeding database with product data...");
+        System.out.println("Database is empty or missing products. Seeding database with product data...");
         System.out.println("This may take a few moments...");
         seedData();
         System.out.println("========================================");
@@ -154,11 +160,21 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private Service createService(String name, String icon, String description) {
-        Service service = new Service();
+        // Check if service already exists
+        Service service = serviceRepository.findByName(name).orElse(null);
+        if (service != null) {
+            System.out.println("Service '" + name + "' already exists, reusing it.");
+            return service;
+        }
+        
+        // Create new service if it doesn't exist
+        service = new Service();
         service.setName(name);
         service.setIcon(icon);
         service.setDescription(description);
-        return serviceRepository.save(service);
+        service = serviceRepository.save(service);
+        System.out.println("Created new service: " + name);
+        return service;
     }
 
     private ProductCategory createCategory(String name, Service service) {
