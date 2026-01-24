@@ -256,8 +256,13 @@ function AppNavigator() {
   return (
     <NavigationContainer 
       ref={navigationRef} 
-      onStateChange={() => {
+      onStateChange={async () => {
         // Re-check users when navigation state changes
+        await checkSalesUser();
+        await checkAdminUser();
+      }}
+      onReady={() => {
+        // Also check on ready
         checkSalesUser();
         checkAdminUser();
       }}

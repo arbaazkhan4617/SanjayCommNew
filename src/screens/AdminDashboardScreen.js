@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -81,9 +82,28 @@ const AdminDashboardScreen = () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('adminUser');
-      navigation.replace('AdminLogin');
+      
+      // Get the root navigator and reset to AdminLogin
+      // This will trigger AppNavigator's onStateChange which will re-check adminUser
+      const rootNavigator = navigation.getRootNavigator ? navigation.getRootNavigator() : navigation;
+      if (rootNavigator) {
+        rootNavigator.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'AdminLogin' }],
+          })
+        );
+      } else {
+        // Fallback: navigate to trigger state change
+        navigation.navigate('AdminLogin');
+      }
     } catch (error) {
       console.error('Error logging out:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Error',
+        text2: 'Failed to logout. Please try again.',
+      });
     }
   };
 

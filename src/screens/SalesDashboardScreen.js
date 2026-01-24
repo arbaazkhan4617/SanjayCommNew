@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import Header from '../components/Header';
@@ -42,9 +43,29 @@ const SalesDashboardScreen = () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('salesUser');
-      navigation.replace('SalesLogin');
+      setSalesUser(null); // Clear local state
+      
+      // Get the root navigator and reset to SalesLogin
+      // This will trigger AppNavigator's onStateChange which will re-check salesUser
+      const rootNavigator = navigation.getRootNavigator ? navigation.getRootNavigator() : navigation;
+      if (rootNavigator) {
+        rootNavigator.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'SalesLogin' }],
+          })
+        );
+      } else {
+        // Fallback: navigate to trigger state change
+        navigation.navigate('SalesLogin');
+      }
     } catch (error) {
       console.error('Error logging out:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Error',
+        text2: 'Failed to logout. Please try again.',
+      });
     }
   };
   const [stats, setStats] = useState(null);
