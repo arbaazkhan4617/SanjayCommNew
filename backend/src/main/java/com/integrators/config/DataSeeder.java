@@ -106,6 +106,7 @@ public class DataSeeder implements CommandLineRunner {
         // Create default sales user if not exists
         if (!userRepository.existsByEmail("sales@sanjaycomm.com")) {
             User salesUser = new User();
+            
             salesUser.setName("Sales Team");
             salesUser.setEmail("sales@sanjaycomm.com");
             salesUser.setPassword(passwordEncoder.encode("sales123"));
