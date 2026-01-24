@@ -26,15 +26,15 @@ const ProductsScreen = () => {
 
   useEffect(() => {
     loadServices();
-    loadAllProducts(); // Load all products by default
+    // Don't load products by default - show services/categories first
   }, []);
 
   useEffect(() => {
     if (searchQuery) {
       searchProducts();
     } else {
-      // When search is cleared, show all products again
-      loadAllProducts();
+      // When search is cleared, clear products to show services again
+      setProducts([]);
     }
   }, [searchQuery]);
 
@@ -145,58 +145,57 @@ const ProductsScreen = () => {
         )}
       </View>
 
-      {/* Filter and Sort - Always show when products are loaded */}
-      {products.length > 0 && (
-        <View style={styles.filterContainer}>
-          <View style={styles.filterRow}>
-            <Text style={styles.resultsText}>
-              {searchQuery ? `${filteredProducts.length} Results` : `${filteredProducts.length} Products`}
-            </Text>
-            <TouchableOpacity
-              style={styles.sortButton}
-              onPress={() => {
-                const options = ['default', 'price-low', 'price-high', 'rating'];
-                const currentIndex = options.indexOf(sortBy);
-                const nextIndex = (currentIndex + 1) % options.length;
-                setSortBy(options[nextIndex]);
-              }}
-            >
-              <Ionicons name="options" size={20} color={COLORS.primary} />
-              <Text style={styles.sortText}>
-                {sortBy === 'default'
-                  ? 'Sort'
-                  : sortBy === 'price-low'
-                  ? 'Price: Low to High'
-                  : sortBy === 'price-high'
-                  ? 'Price: High to Low'
-                  : 'Rating'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       {/* Products List or Services List */}
-      {loading ? (
+      {loading && !searchQuery ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading products...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : searchQuery && searchLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
-      ) : products.length > 0 ? (
-        <FlatList
-          data={filteredProducts}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : searchQuery ? (
+      ) : searchQuery && products.length > 0 ? (
+        <>
+          {/* Filter and Sort - Show when products are loaded from search */}
+          <View style={styles.filterContainer}>
+            <View style={styles.filterRow}>
+              <Text style={styles.resultsText}>
+                {filteredProducts.length} Results
+              </Text>
+              <TouchableOpacity
+                style={styles.sortButton}
+                onPress={() => {
+                  const options = ['default', 'price-low', 'price-high', 'rating'];
+                  const currentIndex = options.indexOf(sortBy);
+                  const nextIndex = (currentIndex + 1) % options.length;
+                  setSortBy(options[nextIndex]);
+                }}
+              >
+                <Ionicons name="options" size={20} color={COLORS.primary} />
+                <Text style={styles.sortText}>
+                  {sortBy === 'default'
+                    ? 'Sort'
+                    : sortBy === 'price-low'
+                    ? 'Price: Low to High'
+                    : sortBy === 'price-high'
+                    ? 'Price: High to Low'
+                    : 'Rating'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <FlatList
+            data={filteredProducts}
+            renderItem={renderProduct}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={2}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
+      ) : searchQuery && products.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="search-outline" size={64} color={COLORS.textLight} />
           <Text style={styles.emptyText}>No products found</Text>

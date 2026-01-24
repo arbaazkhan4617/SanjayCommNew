@@ -110,7 +110,15 @@ const HomeScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Categories</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Products')}>
+              <TouchableOpacity onPress={() => {
+                // Navigate to Products tab which shows services/categories
+                const parent = navigation.getParent();
+                if (parent) {
+                  parent.navigate('ProductsTab');
+                } else {
+                  navigation.navigate('Products');
+                }
+              }}>
                 <Text style={styles.seeAll}>See All</Text>
               </TouchableOpacity>
             </View>
@@ -145,9 +153,6 @@ const HomeScreen = () => {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Featured Products</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Products')}>
-                  <Text style={styles.seeAll}>See All</Text>
-                </TouchableOpacity>
               </View>
               <View style={styles.productsGrid}>
                 {featuredProducts.map((product) => (
