@@ -40,11 +40,14 @@ const ProductsScreen = () => {
 
   const loadServices = async () => {
     try {
+      setLoading(true);
       const response = await productAPI.getServices();
       setServices(response.data);
     } catch (error) {
       console.error('Error loading services:', error);
       setServices([]);
+    } finally {
+      setLoading(false);
     }
   };
 
