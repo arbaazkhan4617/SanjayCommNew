@@ -11,7 +11,7 @@ import java.util.Map;
 @Component
 public class DataSeeder implements CommandLineRunner {
     // Expected counts for seeded data
-    private static final long EXPECTED_SERVICES = 1;
+    private static final long EXPECTED_SERVICES = 8; // CCTV, Computers, Networking, Access Controls, Fire Alarms, Video Door Phones, Solar Power, Audio Video
     private static final long EXPECTED_CATEGORIES = 9;
     private static final long EXPECTED_BRANDS = 111;
     private static final long EXPECTED_MODELS = 130;
@@ -170,57 +170,100 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedData() {
-        // Create Sales Service (Main service for all products)
-        Service salesService = createService("Sales", "storefront", "Complete range of security and technology products");
-
-        // CCTV Systems - Two main types
-        ProductCategory ipHdSystems = createCategory("IP HD Systems", salesService);
-        ProductCategory analogHdSystems = createCategory("Analog HD Systems", salesService);
+        System.out.println("Creating all services...");
         
-        // Fire Alarm Systems - Two types
-        ProductCategory conventionalFireAlarms = createCategory("Conventional Fire Alarm Systems", salesService);
-        ProductCategory addressableFireAlarms = createCategory("Analogue Addressable Fire Alarm Systems", salesService);
+        // 1. CCTV Service
+        Service cctvService = createService("CCTV", "videocam", "Complete CCTV surveillance solutions including IP and analog systems");
+        ProductCategory ipCameras = createCategory("IP Cameras", cctvService);
+        ProductCategory ptzCameras = createCategory("PTZ Cameras", cctvService);
+        ProductCategory wifiCameras = createCategory("WiFi Cameras", cctvService);
+        ProductCategory bulletCameras = createCategory("Bullet Cameras", cctvService);
+        ProductCategory ipHdSystems = createCategory("IP HD Systems", cctvService);
+        ProductCategory analogHdSystems = createCategory("Analog HD Systems", cctvService);
         
-        // Biometrics
-        ProductCategory biometrics = createCategory("Biometrics", salesService);
+        // 2. Computers Service
+        Service computersService = createService("Computers", "desktop", "Desktop computers, laptops, and computer accessories");
+        ProductCategory desktopPC = createCategory("Desktop PC", computersService);
+        ProductCategory laptop = createCategory("Laptop", computersService);
+        ProductCategory computerAccessories = createCategory("Computer Accessories", computersService);
         
-        // Video Door Phones - Two types
-        ProductCategory analogueVDP = createCategory("Analogue Video Door Phones", salesService);
-        ProductCategory ipVDP = createCategory("IP Video Door Phones", salesService);
+        // 3. Networking Service
+        Service networkingService = createService("Networking", "wifi", "Network equipment including switches, routers, and cables");
+        ProductCategory networkSwitches = createCategory("Network Switches", networkingService);
+        ProductCategory routers = createCategory("Routers", networkingService);
+        ProductCategory networkCables = createCategory("Network Cables", networkingService);
         
-        // Electronic Locks
-        ProductCategory electronicLocks = createCategory("Electronic Locks", salesService);
+        // 4. Access Controls Service
+        Service accessControlService = createService("Access Controls", "shield-checkmark", "Access control systems including biometrics and electronic locks");
+        ProductCategory biometricDevices = createCategory("Biometrics", accessControlService);
+        ProductCategory doorLocks = createCategory("Door Locks", accessControlService);
+        ProductCategory faceMachines = createCategory("Face Recognition Machines", accessControlService);
+        ProductCategory electronicLocks = createCategory("Electronic Locks", accessControlService);
+        ProductCategory gpsDevices = createCategory("GPS Devices for Vehicles", accessControlService);
         
-        // GPS Devices
-        ProductCategory gpsDevices = createCategory("GPS Devices for Vehicles", salesService);
-
-        // Seed all products - wrap each in try-catch to continue even if one fails
+        // 5. Fire Alarms Service
+        Service fireAlarmService = createService("Fire Alarms", "flame", "Fire alarm systems and safety equipment");
+        ProductCategory firePanels = createCategory("Fire Panels", fireAlarmService);
+        ProductCategory smokeDetectors = createCategory("Smoke Detectors", fireAlarmService);
+        ProductCategory conventionalFireAlarms = createCategory("Conventional Fire Alarm Systems", fireAlarmService);
+        ProductCategory addressableFireAlarms = createCategory("Analogue Addressable Fire Alarm Systems", fireAlarmService);
+        
+        // 6. Video Door Phones Service
+        Service videoDoorPhoneService = createService("Video Door Phones", "call", "Video door phone systems for residential and commercial use");
+        ProductCategory videoDoorPhones = createCategory("Video Door Phones", videoDoorPhoneService);
+        ProductCategory analogueVDP = createCategory("Analogue Video Door Phones", videoDoorPhoneService);
+        ProductCategory ipVDP = createCategory("IP Video Door Phones", videoDoorPhoneService);
+        
+        // 7. Solar Power Service
+        Service solarService = createService("Solar Power", "sunny", "Solar power solutions and inverters");
+        ProductCategory solarInverters = createCategory("Solar Inverters", solarService);
+        ProductCategory solarBatteries = createCategory("Solar Batteries", solarService);
+        ProductCategory solarCables = createCategory("Solar Cables", solarService);
+        
+        // 8. Audio Video Service
+        Service audioVideoService = createService("Audio Video", "musical-notes", "Audio and video equipment");
+        ProductCategory speakers = createCategory("Speakers", audioVideoService);
+        ProductCategory amplifiers = createCategory("Amplifiers", audioVideoService);
+        
+        System.out.println("All services created. Starting to seed products...");
+        
+        // Seed CCTV products (using existing seed methods for IP HD and Analog HD)
         System.out.println("Starting to seed IP HD Systems...");
         try { seedIPHDSystems(ipHdSystems); } catch (Exception e) { System.err.println("Error seeding IP HD Systems: " + e.getMessage()); }
         
         System.out.println("Starting to seed Analog HD Systems...");
         try { seedAnalogHDSystems(analogHdSystems); } catch (Exception e) { System.err.println("Error seeding Analog HD Systems: " + e.getMessage()); }
         
-        System.out.println("Starting to seed Conventional Fire Alarms...");
-        try { seedConventionalFireAlarms(conventionalFireAlarms); } catch (Exception e) { System.err.println("Error seeding Conventional Fire Alarms: " + e.getMessage()); }
+        // Seed other CCTV categories if seed methods exist
+        try { seedCCTVProducts(cctvService, ipCameras, ptzCameras, wifiCameras, bulletCameras); } catch (Exception e) { System.err.println("Error seeding CCTV Products: " + e.getMessage()); }
         
-        System.out.println("Starting to seed Addressable Fire Alarms...");
+        // Seed Computer products
+        try { seedComputerProducts(computersService, desktopPC, laptop, computerAccessories); } catch (Exception e) { System.err.println("Error seeding Computer Products: " + e.getMessage()); }
+        
+        // Seed Networking products
+        try { seedNetworkingProducts(networkingService, networkSwitches, routers, networkCables); } catch (Exception e) { System.err.println("Error seeding Networking Products: " + e.getMessage()); }
+        
+        // Seed Access Control products
+        try { seedAccessControlProducts(accessControlService, biometricDevices, doorLocks, faceMachines); } catch (Exception e) { System.err.println("Error seeding Access Control Products: " + e.getMessage()); }
+        try { seedBiometrics(biometricDevices); } catch (Exception e) { System.err.println("Error seeding Biometrics: " + e.getMessage()); }
+        try { seedElectronicLocks(electronicLocks); } catch (Exception e) { System.err.println("Error seeding Electronic Locks: " + e.getMessage()); }
+        try { seedGPSDevices(gpsDevices); } catch (Exception e) { System.err.println("Error seeding GPS Devices: " + e.getMessage()); }
+        
+        // Seed Fire Alarm products
+        try { seedFireAlarmProducts(fireAlarmService, firePanels, smokeDetectors); } catch (Exception e) { System.err.println("Error seeding Fire Alarm Products: " + e.getMessage()); }
+        try { seedConventionalFireAlarms(conventionalFireAlarms); } catch (Exception e) { System.err.println("Error seeding Conventional Fire Alarms: " + e.getMessage()); }
         try { seedAddressableFireAlarms(addressableFireAlarms); } catch (Exception e) { System.err.println("Error seeding Addressable Fire Alarms: " + e.getMessage()); }
         
-        System.out.println("Starting to seed Biometrics...");
-        try { seedBiometrics(biometrics); } catch (Exception e) { System.err.println("Error seeding Biometrics: " + e.getMessage()); }
-        
-        System.out.println("Starting to seed Analogue VDP...");
+        // Seed Video Door Phone products
+        try { seedVideoDoorPhoneProducts(videoDoorPhoneService, videoDoorPhones); } catch (Exception e) { System.err.println("Error seeding Video Door Phone Products: " + e.getMessage()); }
         try { seedAnalogueVDP(analogueVDP); } catch (Exception e) { System.err.println("Error seeding Analogue VDP: " + e.getMessage()); }
-        
-        System.out.println("Starting to seed IP VDP...");
         try { seedIPVDP(ipVDP); } catch (Exception e) { System.err.println("Error seeding IP VDP: " + e.getMessage()); }
         
-        System.out.println("Starting to seed Electronic Locks...");
-        try { seedElectronicLocks(electronicLocks); } catch (Exception e) { System.err.println("Error seeding Electronic Locks: " + e.getMessage()); }
+        // Seed Solar products
+        try { seedSolarProducts(solarService, solarInverters, solarBatteries, solarCables); } catch (Exception e) { System.err.println("Error seeding Solar Products: " + e.getMessage()); }
         
-        System.out.println("Starting to seed GPS Devices...");
-        try { seedGPSDevices(gpsDevices); } catch (Exception e) { System.err.println("Error seeding GPS Devices: " + e.getMessage()); }
+        // Seed Audio Video products
+        try { seedAudioVideoProducts(audioVideoService, speakers, amplifiers); } catch (Exception e) { System.err.println("Error seeding Audio Video Products: " + e.getMessage()); }
         
         System.out.println("All seed methods completed.");
     }
