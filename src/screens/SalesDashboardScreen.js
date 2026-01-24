@@ -45,20 +45,20 @@ const SalesDashboardScreen = () => {
       await AsyncStorage.removeItem('salesUser');
       setSalesUser(null); // Clear local state
       
-      // Get the root navigator and reset to SalesLogin
-      // This will trigger AppNavigator's onStateChange which will re-check salesUser
-      const rootNavigator = navigation.getRootNavigator ? navigation.getRootNavigator() : navigation;
-      if (rootNavigator) {
-        rootNavigator.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'SalesLogin' }],
-          })
-        );
-      } else {
-        // Fallback: navigate to trigger state change
-        navigation.navigate('SalesLogin');
+      // Get the root navigator by traversing up the navigation tree
+      let rootNavigator = navigation;
+      while (rootNavigator.getParent && rootNavigator.getParent()) {
+        rootNavigator = rootNavigator.getParent();
       }
+      
+      // Reset the root navigator to SalesLogin
+      // This will trigger AppNavigator's onStateChange which will re-check salesUser
+      rootNavigator.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'SalesLogin' }],
+        })
+      );
     } catch (error) {
       console.error('Error logging out:', error);
       Toast.show({

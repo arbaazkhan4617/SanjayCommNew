@@ -83,20 +83,20 @@ const AdminDashboardScreen = () => {
     try {
       await AsyncStorage.removeItem('adminUser');
       
-      // Get the root navigator and reset to AdminLogin
-      // This will trigger AppNavigator's onStateChange which will re-check adminUser
-      const rootNavigator = navigation.getRootNavigator ? navigation.getRootNavigator() : navigation;
-      if (rootNavigator) {
-        rootNavigator.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'AdminLogin' }],
-          })
-        );
-      } else {
-        // Fallback: navigate to trigger state change
-        navigation.navigate('AdminLogin');
+      // Get the root navigator by traversing up the navigation tree
+      let rootNavigator = navigation;
+      while (rootNavigator.getParent && rootNavigator.getParent()) {
+        rootNavigator = rootNavigator.getParent();
       }
+      
+      // Reset the root navigator to AdminLogin
+      // This will trigger AppNavigator's onStateChange which will re-check adminUser
+      rootNavigator.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'AdminLogin' }],
+        })
+      );
     } catch (error) {
       console.error('Error logging out:', error);
       Toast.show({
