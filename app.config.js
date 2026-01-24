@@ -25,7 +25,10 @@ export default {
       package: "com.integrators.app"
     },
     extra: {
-      apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://your-app-name.railway.app/api"
+      apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://sanjaycommnew-production.up.railway.app/api",
+      eas: {
+        projectId: "a205eb2b-2723-4438-b198-2c79294bd53b"
+      }
     }
   }
 };
