@@ -178,20 +178,25 @@ public class DataSeeder implements CommandLineRunner {
         ProductCategory ptzCameras = createCategory("PTZ Cameras", cctvService);
         ProductCategory wifiCameras = createCategory("WiFi Cameras", cctvService);
         ProductCategory bulletCameras = createCategory("Bullet Cameras", cctvService);
+        ProductCategory domeCameras = createCategory("Dome Cameras", cctvService);
+        ProductCategory dvrSystems = createCategory("DVR Systems", cctvService);
+        ProductCategory cctvAccessoriesForCCTV = createCategory("CCTV Accessories", cctvService);
         ProductCategory ipHdSystems = createCategory("IP HD Systems", cctvService);
         ProductCategory analogHdSystems = createCategory("Analog HD Systems", cctvService);
         
         // 2. Computers Service
         Service computersService = createService("Computers", "desktop", "Desktop computers, laptops, and computer accessories");
         ProductCategory desktopPC = createCategory("Desktop PC", computersService);
-        ProductCategory laptop = createCategory("Laptop", computersService);
+        ProductCategory printers = createCategory("Printers", computersService);
+        ProductCategory monitors = createCategory("Monitors", computersService);
         ProductCategory computerAccessories = createCategory("Computer Accessories", computersService);
         
         // 3. Networking Service
         Service networkingService = createService("Networking", "wifi", "Network equipment including switches, routers, and cables");
         ProductCategory networkSwitches = createCategory("Network Switches", networkingService);
         ProductCategory routers = createCategory("Routers", networkingService);
-        ProductCategory networkCables = createCategory("Network Cables", networkingService);
+        ProductCategory cables = createCategory("Cables", networkingService);
+        ProductCategory poeSwitches = createCategory("PoE Switches", networkingService);
         
         // 4. Access Controls Service
         Service accessControlService = createService("Access Controls", "shield-checkmark", "Access control systems including biometrics and electronic locks");
@@ -252,13 +257,13 @@ public class DataSeeder implements CommandLineRunner {
         System.out.println("Starting to seed Analog HD Systems...");
         try { seedAnalogHDSystems(analogHdSystems); } catch (Exception e) { System.err.println("Error seeding Analog HD Systems: " + e.getMessage()); }
         
-        try { seedCCTVProducts(cctvService, ipCameras, ptzCameras, wifiCameras, bulletCameras); } catch (Exception e) { System.err.println("Error seeding CCTV Products: " + e.getMessage()); }
+        try { seedCCTVProducts(cctvService, ipCameras, ptzCameras, wifiCameras, bulletCameras, domeCameras, dvrSystems, cctvAccessoriesForCCTV); } catch (Exception e) { System.err.println("Error seeding CCTV Products: " + e.getMessage()); }
         
         // Seed Computer products
-        try { seedComputerProducts(computersService, desktopPC, laptop, computerAccessories); } catch (Exception e) { System.err.println("Error seeding Computer Products: " + e.getMessage()); }
+        try { seedComputerProducts(computersService, desktopPC, printers, monitors, computerAccessories); } catch (Exception e) { System.err.println("Error seeding Computer Products: " + e.getMessage()); }
         
         // Seed Networking products
-        try { seedNetworkingProducts(networkingService, networkSwitches, routers, networkCables); } catch (Exception e) { System.err.println("Error seeding Networking Products: " + e.getMessage()); }
+        try { seedNetworkingProducts(networkingService, networkSwitches, routers, cables, poeSwitches); } catch (Exception e) { System.err.println("Error seeding Networking Products: " + e.getMessage()); }
         
         // Seed Access Control products
         try { seedAccessControlProducts(accessControlService, biometricDevices, doorLocks, faceMachines); } catch (Exception e) { System.err.println("Error seeding Access Control Products: " + e.getMessage()); }
