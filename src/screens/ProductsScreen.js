@@ -19,37 +19,22 @@ const ProductsScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
-  const [services, setServices] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
-    loadServices();
-    // Don't load products by default - show services/categories first
+    loadAllProducts(); // Load all products by default
   }, []);
 
   useEffect(() => {
     if (searchQuery) {
       searchProducts();
     } else {
-      // When search is cleared, clear products to show services again
-      setProducts([]);
+      // When search is cleared, show all products again
+      loadAllProducts();
     }
   }, [searchQuery]);
-
-  const loadServices = async () => {
-    try {
-      setLoading(true);
-      const response = await productAPI.getServices();
-      setServices(response.data);
-    } catch (error) {
-      console.error('Error loading services:', error);
-      setServices([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadAllProducts = async () => {
     try {
@@ -91,20 +76,6 @@ const ProductsScreen = () => {
 
     return filtered;
   }, [products, sortBy]);
-
-  const renderService = ({ item }) => (
-    <TouchableOpacity
-      style={styles.serviceCard}
-      onPress={() => navigation.navigate('ProductCategories', { service: item })}
-      activeOpacity={0.7}
-    >
-      <View style={styles.serviceIcon}>
-        <Ionicons name={item.icon || 'grid-outline'} size={32} color={COLORS.primary} />
-      </View>
-      <Text style={styles.serviceName}>{item.name}</Text>
-      <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
-    </TouchableOpacity>
-  );
 
   const renderProduct = ({ item }) => <ProductCard product={item} />;
 
@@ -148,24 +119,24 @@ const ProductsScreen = () => {
         )}
       </View>
 
-      {/* Products List or Services List */}
+      {/* Products List */}
       {loading && !searchQuery ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>Loading products...</Text>
         </View>
       ) : searchQuery && searchLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
-      ) : searchQuery && products.length > 0 ? (
+      ) : products.length > 0 ? (
         <>
-          {/* Filter and Sort - Show when products are loaded from search */}
+          {/* Filter and Sort - Show when products are loaded */}
           <View style={styles.filterContainer}>
             <View style={styles.filterRow}>
               <Text style={styles.resultsText}>
-                {filteredProducts.length} Results
+                {searchQuery ? `${filteredProducts.length} Results` : `${filteredProducts.length} Products`}
               </Text>
               <TouchableOpacity
                 style={styles.sortButton}
@@ -198,26 +169,14 @@ const ProductsScreen = () => {
             showsVerticalScrollIndicator={false}
           />
         </>
-      ) : searchQuery && products.length === 0 ? (
+      ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="search-outline" size={64} color={COLORS.textLight} />
           <Text style={styles.emptyText}>No products found</Text>
-          <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
+          <Text style={styles.emptySubtext}>
+            {searchQuery ? 'Try adjusting your search or filters' : 'No products available'}
+          </Text>
         </View>
-      ) : (
-        <>
-          <View style={styles.servicesHeader}>
-            <Text style={styles.sectionTitle}>Browse by Service</Text>
-          </View>
-          <FlatList
-            data={services}
-            renderItem={renderService}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={true}
-            style={styles.servicesList}
-          />
-        </>
       )}
     </View>
   );
@@ -279,49 +238,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginLeft: 4,
     fontWeight: '600',
-  },
-  servicesHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  servicesList: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  serviceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  serviceIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  serviceName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
   },
   listContent: {
     paddingHorizontal: 16,

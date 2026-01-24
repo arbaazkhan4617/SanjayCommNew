@@ -110,15 +110,7 @@ const HomeScreen = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Categories</Text>
-              <TouchableOpacity onPress={() => {
-                // Navigate to Products tab which shows services/categories
-                const parent = navigation.getParent();
-                if (parent) {
-                  parent.navigate('ProductsTab');
-                } else {
-                  navigation.navigate('Products');
-                }
-              }}>
+              <TouchableOpacity onPress={() => navigation.navigate('Categories')}>
                 <Text style={styles.seeAll}>See All</Text>
               </TouchableOpacity>
             </View>

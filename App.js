@@ -10,6 +10,7 @@ import Toast from 'react-native-toast-message';
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
 import ProductsScreen from './src/screens/ProductsScreen';
+import CategoriesScreen from './src/screens/CategoriesScreen';
 import ProductCategoriesScreen from './src/screens/ProductCategoriesScreen';
 import BrandsScreen from './src/screens/BrandsScreen';
 import ModelsScreen from './src/screens/ModelsScreen';
@@ -50,6 +51,7 @@ function HomeStack() {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
+      <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
@@ -68,6 +70,7 @@ function ProductsStack() {
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
@@ -86,6 +89,7 @@ function CartStack() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
+      <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
@@ -108,6 +112,7 @@ function ProfileStack() {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
+      <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
