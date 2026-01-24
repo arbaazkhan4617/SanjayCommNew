@@ -26,24 +26,36 @@ const ProductsScreen = () => {
 
   useEffect(() => {
     loadServices();
+    loadAllProducts(); // Load all products by default
   }, []);
 
   useEffect(() => {
     if (searchQuery) {
       searchProducts();
     } else {
-      setProducts([]);
+      // When search is cleared, show all products again
+      loadAllProducts();
     }
   }, [searchQuery]);
 
   const loadServices = async () => {
     try {
-      setLoading(true);
       const response = await productAPI.getServices();
       setServices(response.data);
     } catch (error) {
       console.error('Error loading services:', error);
       setServices([]);
+    }
+  };
+
+  const loadAllProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await productAPI.getAllProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error loading all products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -133,8 +145,64 @@ const ProductsScreen = () => {
         )}
       </View>
 
-      {/* Services List or Products List */}
-      {!searchQuery ? (
+      {/* Filter and Sort - Always show when products are loaded */}
+      {products.length > 0 && (
+        <View style={styles.filterContainer}>
+          <View style={styles.filterRow}>
+            <Text style={styles.resultsText}>
+              {searchQuery ? `${filteredProducts.length} Results` : `${filteredProducts.length} Products`}
+            </Text>
+            <TouchableOpacity
+              style={styles.sortButton}
+              onPress={() => {
+                const options = ['default', 'price-low', 'price-high', 'rating'];
+                const currentIndex = options.indexOf(sortBy);
+                const nextIndex = (currentIndex + 1) % options.length;
+                setSortBy(options[nextIndex]);
+              }}
+            >
+              <Ionicons name="options" size={20} color={COLORS.primary} />
+              <Text style={styles.sortText}>
+                {sortBy === 'default'
+                  ? 'Sort'
+                  : sortBy === 'price-low'
+                  ? 'Price: Low to High'
+                  : sortBy === 'price-high'
+                  ? 'Price: High to Low'
+                  : 'Rating'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Products List or Services List */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading products...</Text>
+        </View>
+      ) : searchQuery && searchLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Searching...</Text>
+        </View>
+      ) : products.length > 0 ? (
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProduct}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : searchQuery ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="search-outline" size={64} color={COLORS.textLight} />
+          <Text style={styles.emptyText}>No products found</Text>
+          <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
+        </View>
+      ) : (
         <View style={styles.servicesContainer}>
           <Text style={styles.sectionTitle}>Browse by Service</Text>
           <FlatList
@@ -145,60 +213,6 @@ const ProductsScreen = () => {
             showsVerticalScrollIndicator={false}
           />
         </View>
-      ) : (
-        <>
-          {/* Filter and Sort */}
-          <View style={styles.filterContainer}>
-            <View style={styles.filterRow}>
-              <Text style={styles.resultsText}>
-                {filteredProducts.length} Products
-              </Text>
-              <TouchableOpacity
-                style={styles.sortButton}
-                onPress={() => {
-                  const options = ['default', 'price-low', 'price-high', 'rating'];
-                  const currentIndex = options.indexOf(sortBy);
-                  const nextIndex = (currentIndex + 1) % options.length;
-                  setSortBy(options[nextIndex]);
-                }}
-              >
-                <Ionicons name="options" size={20} color={COLORS.primary} />
-                <Text style={styles.sortText}>
-                  {sortBy === 'default'
-                    ? 'Sort'
-                    : sortBy === 'price-low'
-                    ? 'Price: Low to High'
-                    : sortBy === 'price-high'
-                    ? 'Price: High to Low'
-                    : 'Rating'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Products List */}
-          {searchLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.loadingText}>Searching...</Text>
-            </View>
-          ) : filteredProducts.length > 0 ? (
-            <FlatList
-              data={filteredProducts}
-              renderItem={renderProduct}
-              keyExtractor={(item) => item.id.toString()}
-              numColumns={2}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={64} color={COLORS.textLight} />
-              <Text style={styles.emptyText}>No products found</Text>
-              <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
-            </View>
-          )}
-        </>
       )}
     </View>
   );
