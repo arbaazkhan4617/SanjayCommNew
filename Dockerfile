@@ -3,8 +3,10 @@ FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# Copy Maven files
-COPY backend/pom.xml .
+# Copy Maven files first (for better caching)
+COPY backend/pom.xml ./pom.xml
+
+# Copy source code
 COPY backend/src ./src
 
 # Build the application
