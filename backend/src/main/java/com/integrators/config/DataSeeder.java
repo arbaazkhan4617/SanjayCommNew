@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Random;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -24,6 +25,19 @@ public class DataSeeder implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final Random random = new Random();
+    
+    // Camera image URLs to randomly choose from
+    private static final String[] CAMERA_IMAGES = {
+        "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTUPJq4eakJ7-Obx88Q-OMwr-7rOuRlbuivzd9UbfXwporWRrkfotcbPB1K-dWcUlZVu9xxyE_UDn8c60ywwv4rKjAhNKOu9njBqwwwMVFh&usqp=CAc",
+        "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTvNAKRkm8TfitndBPnsCMAGR_glb92-7Itsaw82sanXgufaqXMbXnkN-uqTSq-QOChirDaR-lf",
+        "https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSs6ksd3SpuZEW7VBuUN8HzLV20peuKvflcloILL47M8poEDw2gRR2Pxq3Klu2R5X7Tz8v6Yok",
+        "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcSPgxzL4dnaTPPvXPwhmd80ulxVbgg_TTV6ZBLAEVk2BoLlLonRi5CThXDigUV6ZrJl1ZRU5PA"
+    };
+    
+    private String getRandomCameraImage() {
+        return CAMERA_IMAGES[random.nextInt(CAMERA_IMAGES.length)];
+    }
 
     public DataSeeder(ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository, BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.serviceRepository = serviceRepository;
@@ -401,7 +415,7 @@ public class DataSeeder implements CommandLineRunner {
         // Prama IP Camera
         Brand prama = createBrand("Prama", ipCameras);
         Model pramaVarifocal = createModel("Varifocal Zoom Lens IR Camera", 
-            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", prama);
+            getRandomCameraImage(), prama);
         createProduct(pramaVarifocal, "Prama Varifocal Zoom Lens IR Camera",
             "High-quality IP camera with varifocal zoom lens (2.8-12mm) and powerful IR night vision up to 30 meters. Perfect for outdoor surveillance with adjustable focal length for flexible installation.",
             new BigDecimal("8500"), new BigDecimal("10000"), true, 4.5, 120,
@@ -412,7 +426,7 @@ public class DataSeeder implements CommandLineRunner {
         // Hikvision PTZ Camera
         Brand hikvision = createBrand("Hikvision", ptzCameras);
         Model hikvisionPTZ = createModel("Outdoor IR Speed Dome PTZ Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+            getRandomCameraImage(), hikvision);
         createProduct(hikvisionPTZ, "Hikvision Outdoor IR Speed Dome PTZ Camera",
             "Advanced PTZ camera with 360° continuous rotation, 20x optical zoom, and powerful IR illumination up to 200 meters. Features auto-tracking and preset positions. Ideal for large area surveillance.",
             new BigDecimal("45000"), new BigDecimal("55000"), true, 4.8, 85,
@@ -423,32 +437,32 @@ public class DataSeeder implements CommandLineRunner {
         // CP Plus WiFi Camera
         Brand cpPlus = createBrand("CP Plus", wifiCameras);
         Model cpPlusWifi = createModel("WiFi Dome Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", cpPlus);
+            getRandomCameraImage(), cpPlus);
         createProduct(cpPlusWifi, "CP Plus WiFi Dome Camera",
             "Wireless WiFi dome camera with easy installation. Supports mobile app viewing, cloud storage, and two-way audio. Perfect for home and small office security.",
             new BigDecimal("6500"), new BigDecimal("8000"), true, 4.4, 150,
             Map.of("Resolution", "2MP", "Connectivity", "WiFi 802.11n", "Night Vision", "Up to 20m IR",
                    "Power Supply", "12VDC", "Mobile App", "Yes", "Cloud Storage", "Optional", "Warranty", "2 Years"));
 
+        // Dahua Bullet Camera
+        Brand dahua = createBrand("Dahua", bulletCameras);
+        Model dahuaBullet = createModel("Color Bullet Camera",
+            getRandomCameraImage(), dahua);
+        createProduct(dahuaBullet, "Dahua Color Bullet Camera",
+            "Professional bullet camera with color night vision technology. Excellent for outdoor installation with vandal-proof design and weather-resistant housing.",
+            new BigDecimal("9500"), new BigDecimal("12000"), true, 4.7, 200,
+            Map.of("Resolution", "4MP", "Lens", "Fixed 3.6mm", "Night Vision", "Color Night Vision + IR",
+                    "Weatherproof", "IP67", "Power Supply", "12VDC / PoE", "Vandal Proof", "Yes", "Warranty", "3 Years"));
+
         // HD Crystal IP Camera
         Brand hdCrystal = createBrand("HD Crystal", ipCameras);
         Model hdCrystalIP = createModel("IP Color Audio Dome Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", hdCrystal);
+            getRandomCameraImage(), hdCrystal);
         createProduct(hdCrystalIP, "HD Crystal IP Color Audio Dome Camera",
             "Color IP dome camera with built-in microphone and speaker for two-way audio. Features excellent low-light performance with color night vision technology.",
             new BigDecimal("12000"), new BigDecimal("15000"), true, 4.6, 95,
             Map.of("Resolution", "4MP", "Audio", "Built-in Microphone & Speaker", "Night Vision", "Color Night Vision",
                    "Weatherproof", "IP67", "Power Supply", "PoE", "Two-way Audio", "Yes", "Warranty", "3 Years"));
-
-        // Dahua Bullet Camera
-        Brand dahua = createBrand("Dahua", bulletCameras);
-        Model dahuaBullet = createModel("Color Bullet Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", dahua);
-        createProduct(dahuaBullet, "Dahua Color Bullet Camera",
-            "Professional bullet camera with color night vision technology. Excellent for outdoor installation with vandal-proof design and weather-resistant housing.",
-            new BigDecimal("9500"), new BigDecimal("12000"), true, 4.7, 200,
-            Map.of("Resolution", "4MP", "Lens", "Fixed 3.6mm", "Night Vision", "Color Night Vision + IR",
-                   "Weatherproof", "IP67", "Power Supply", "12VDC / PoE", "Vandal Proof", "Yes", "Warranty", "3 Years"));
 
         // CP Plus DVR 16 Channel
         Brand cpPlusDVR = createBrand("CP Plus", dvrSystems);
@@ -522,7 +536,7 @@ public class DataSeeder implements CommandLineRunner {
         // SecureEye PT Dome Camera
         Brand secureEye = createBrand("SecureEye", ptzCameras);
         Model secureEyePT = createModel("PT Dome Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", secureEye);
+            getRandomCameraImage(), secureEye);
         createProduct(secureEyePT, "SecureEye PT Dome Camera",
             "Pan-tilt dome camera with remote control. Features smooth movement, preset positions, and excellent image quality.",
             new BigDecimal("25000"), new BigDecimal("30000"), true, 4.5, 90,
@@ -532,7 +546,7 @@ public class DataSeeder implements CommandLineRunner {
         // EZVIZ H4 Camera
         Brand ezviz = createBrand("EZVIZ", wifiCameras);
         Model ezvizH4 = createModel("H4 Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", ezviz);
+            getRandomCameraImage(), ezviz);
         createProduct(ezvizH4, "EZVIZ H4 Camera",
             "Smart WiFi camera with AI features including person detection. Supports cloud storage and mobile app control.",
             new BigDecimal("5500"), new BigDecimal("7000"), true, 4.3, 200,
@@ -541,7 +555,7 @@ public class DataSeeder implements CommandLineRunner {
 
         // EZVIZ Wireless Cube Camera
         Model ezvizCube = createModel("Wireless Cube Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", ezviz);
+            getRandomCameraImage(), ezviz);
         createProduct(ezvizCube, "EZVIZ Wireless Cube Camera",
             "Compact cube-shaped WiFi camera. Perfect for home and small office security with modern design.",
             new BigDecimal("5000"), new BigDecimal("6500"), true, 4.3, 220,
@@ -551,7 +565,7 @@ public class DataSeeder implements CommandLineRunner {
         // True View WiFi Mini Pan Camera
         Brand trueView = createBrand("True View", wifiCameras);
         Model trueViewWiFi = createModel("WiFi Mini Pan Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", trueView);
+            getRandomCameraImage(), trueView);
         createProduct(trueViewWiFi, "True View WiFi Mini Pan Camera",
             "Compact WiFi camera with pan functionality. Perfect for indoor monitoring with 360° coverage.",
             new BigDecimal("4500"), new BigDecimal("6000"), true, 4.2, 180,
@@ -561,7 +575,7 @@ public class DataSeeder implements CommandLineRunner {
         // Dual Lens 4G Solar PT Camera
         Brand dualLens = createBrand("Dual Lens", ptzCameras);
         Model dualLens4G = createModel("4G Solar PT Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", dualLens);
+            getRandomCameraImage(), dualLens);
         createProduct(dualLens4G, "Dual Lens 4G Solar PT Camera",
             "Solar-powered PT camera with 4G connectivity. No wiring required, perfect for remote locations. Features dual lens technology for wider coverage.",
             new BigDecimal("35000"), new BigDecimal("45000"), true, 4.7, 75,
@@ -571,7 +585,7 @@ public class DataSeeder implements CommandLineRunner {
         // EyeSera Linkage PT Camera
         Brand eyeSera = createBrand("EyeSera", ptzCameras);
         Model eyeSeraPT = createModel("Linkage PT Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", eyeSera);
+            getRandomCameraImage(), eyeSera);
         createProduct(eyeSeraPT, "EyeSera Linkage PT Camera",
             "Advanced PT camera with linkage features. Supports multiple camera coordination and synchronized movement.",
             new BigDecimal("28000"), new BigDecimal("35000"), true, 4.6, 85,
@@ -580,7 +594,7 @@ public class DataSeeder implements CommandLineRunner {
 
         // CP Plus Wireless 2MP Camera
         Model cpPlusWireless = createModel("Wireless 2MP Camera",
-            "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", cpPlus);
+            getRandomCameraImage(), cpPlus);
         createProduct(cpPlusWireless, "CP Plus Wireless 2MP Camera",
             "Wireless IP camera with easy setup. Features mobile app control and cloud storage options.",
             new BigDecimal("6000"), new BigDecimal("7500"), true, 4.4, 160,
@@ -590,7 +604,7 @@ public class DataSeeder implements CommandLineRunner {
         // Impact 4MM Lens Color Camera
         Brand impactCamera = createBrand("Impact", bulletCameras);
         Model impact4MM = createModel("4MM Lens Color with Audio Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", impactCamera);
+            getRandomCameraImage(), impactCamera);
         createProduct(impact4MM, "Impact 4MM Lens Color with Audio Camera",
             "Color bullet camera with 4mm lens and built-in audio. Features excellent image quality and two-way communication.",
             new BigDecimal("7500"), new BigDecimal("9000"), true, 4.5, 150,
@@ -600,7 +614,7 @@ public class DataSeeder implements CommandLineRunner {
         // Hi-Focus HD Bullet Camera
         Brand hiFocusCamera = createBrand("Hi-Focus", bulletCameras);
         Model hiFocusHD = createModel("Color HD Bullet Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hiFocusCamera);
+            getRandomCameraImage(), hiFocusCamera);
         createProduct(hiFocusHD, "Hi-Focus Color HD Bullet Camera",
             "HD bullet camera with excellent image quality. Perfect for outdoor surveillance.",
             new BigDecimal("5500"), new BigDecimal("7000"), true, 4.4, 200,
@@ -610,7 +624,7 @@ public class DataSeeder implements CommandLineRunner {
         // Consistent HD Camera
         Brand consistentCamera = createBrand("Consistent", bulletCameras);
         Model consistentHD = createModel("Color HD Camera",
-            "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", consistentCamera);
+            getRandomCameraImage(), consistentCamera);
         createProduct(consistentHD, "Consistent Color HD Camera",
             "Reliable HD camera with good performance. Cost-effective solution for surveillance.",
             new BigDecimal("5000"), new BigDecimal("6500"), true, 4.3, 180,
@@ -1354,7 +1368,7 @@ public class DataSeeder implements CommandLineRunner {
         Brand consistent = createBrand("Consistent", ipHdSystems);
         
         // Dome Camera - Prama
-        Model pramaDome = createModel("Dome Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", prama);
+        Model pramaDome = createModel("Dome Camera", getRandomCameraImage(), prama);
         createProduct(pramaDome, "Prama IP HD Dome Camera",
             "IP HD dome camera for indoor use. Features digital image processor for superior quality, PoE support, and excellent low-light performance.",
             new BigDecimal("8500"), new BigDecimal("10000"), true, 4.5, 120,
@@ -1362,7 +1376,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Night Vision", "IR up to 30m", "Warranty", "2 Years On-site"));
         
         // Bullet Camera - Hikvision
-        Model hikvisionBullet = createModel("Bullet Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        Model hikvisionBullet = createModel("Bullet Camera", getRandomCameraImage(), hikvision);
         createProduct(hikvisionBullet, "Hikvision IP HD Bullet Camera",
             "IP HD bullet camera for outdoor use. Weatherproof design with digital image processing for superior image quality.",
             new BigDecimal("9500"), new BigDecimal("12000"), true, 4.7, 200,
@@ -1370,7 +1384,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Image Quality", "Digital Processor", "Warranty", "2 Years On-site"));
         
         // Varifocal Camera - Prama
-        Model pramaVarifocal = createModel("Varifocal Zoom Lens IR Camera", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", prama);
+        Model pramaVarifocal = createModel("Varifocal Zoom Lens IR Camera", getRandomCameraImage(), prama);
         createProduct(pramaVarifocal, "Prama Varifocal Zoom Lens IR Camera",
             "Varifocal IP camera for long distance monitoring. Adjustable focal length with powerful IR night vision.",
             new BigDecimal("12000"), new BigDecimal("15000"), true, 4.6, 95,
@@ -1378,7 +1392,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Power", "PoE", "Warranty", "2 Years On-site"));
         
         // PTZ Camera - Hikvision
-        Model hikvisionPTZ = createModel("PTZ Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        Model hikvisionPTZ = createModel("PTZ Camera", getRandomCameraImage(), hikvision);
         createProduct(hikvisionPTZ, "Hikvision IP HD PTZ Camera",
             "Advanced PTZ camera with 360° rotation and zoom. Perfect for large area surveillance with digital image processing.",
             new BigDecimal("45000"), new BigDecimal("55000"), true, 4.8, 85,
@@ -1386,7 +1400,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Power", "PoE+", "Warranty", "2 Years On-site"));
         
         // WiFi Camera - CP Plus
-        Model cpPlusWiFi = createModel("WiFi Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", cpPlus);
+        Model cpPlusWiFi = createModel("WiFi Camera", getRandomCameraImage(), cpPlus);
         createProduct(cpPlusWiFi, "CP Plus IP HD WiFi Camera",
             "Wireless IP HD camera with WiFi connectivity. Easy installation with mobile app support.",
             new BigDecimal("6500"), new BigDecimal("8000"), true, 4.4, 150,
@@ -1394,7 +1408,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Power", "12VDC", "Warranty", "2 Years On-site"));
         
         // 4G Camera - Trueview
-        Model trueview4G = createModel("4G Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", trueview);
+        Model trueview4G = createModel("4G Camera", getRandomCameraImage(), trueview);
         createProduct(trueview4G, "Trueview IP HD 4G Camera",
             "4G enabled IP HD camera for remote locations. No internet wiring required, works on 4G network.",
             new BigDecimal("18000"), new BigDecimal("22000"), true, 4.5, 100,
@@ -1402,7 +1416,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Mobile App", "Yes", "Warranty", "2 Years On-site"));
         
         // Solar Camera - Consistent
-        Model consistentSolar = createModel("Solar Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", consistent);
+        Model consistentSolar = createModel("Solar Camera", getRandomCameraImage(), consistent);
         createProduct(consistentSolar, "Consistent IP HD Solar Camera",
             "Solar-powered IP HD camera with battery backup. Perfect for locations without power supply.",
             new BigDecimal("25000"), new BigDecimal("30000"), true, 4.6, 80,
@@ -1468,7 +1482,7 @@ public class DataSeeder implements CommandLineRunner {
         Brand impact = createBrand("Impact", analogHdSystems);
         
         // Analog Dome Camera
-        Model pramaAnalogDome = createModel("Analog Dome Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", prama);
+        Model pramaAnalogDome = createModel("Analog Dome Camera", getRandomCameraImage(), prama);
         createProduct(pramaAnalogDome, "Prama Analog HD Dome Camera",
             "Analog HD dome camera for residential use. Cost-effective solution for home security with good image quality.",
             new BigDecimal("4500"), new BigDecimal("5500"), true, 4.4, 200,
@@ -1476,7 +1490,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Warranty", "2 Years On-site"));
         
         // Analog Bullet Camera
-        Model hikvisionAnalogBullet = createModel("Analog Bullet Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        Model hikvisionAnalogBullet = createModel("Analog Bullet Camera", getRandomCameraImage(), hikvision);
         createProduct(hikvisionAnalogBullet, "Hikvision Analog HD Bullet Camera",
             "Analog HD bullet camera for outdoor residential use. Weatherproof design with excellent value for money.",
             new BigDecimal("5000"), new BigDecimal("6000"), true, 4.5, 180,
