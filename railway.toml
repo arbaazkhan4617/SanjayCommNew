@@ -1,8 +1,8 @@
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "cd backend && java -jar target/integrators-backend-1.0.0.jar"
 healthcheckPath = "/api/products/services"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
