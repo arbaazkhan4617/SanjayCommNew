@@ -1,0 +1,13 @@
+# Ignore root Node.js files - Railway should use backend/
+package.json
+package-lock.json
+node_modules/
+.expo/
+src/
+App.js
+app.json
+babel.config.js
+eas.json
+
+# Keep backend directory
+!backend/
