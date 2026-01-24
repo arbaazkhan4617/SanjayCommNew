@@ -205,16 +205,19 @@ const ProductsScreen = () => {
           <Text style={styles.emptySubtext}>Try adjusting your search or filters</Text>
         </View>
       ) : (
-        <View style={styles.servicesContainer}>
-          <Text style={styles.sectionTitle}>Browse by Service</Text>
+        <>
+          <View style={styles.servicesHeader}>
+            <Text style={styles.sectionTitle}>Browse by Service</Text>
+          </View>
           <FlatList
             data={services}
             renderItem={renderService}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            style={styles.servicesList}
           />
-        </View>
+        </>
       )}
     </View>
   );
@@ -277,14 +280,18 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: '600',
   },
-  servicesContainer: {
-    padding: 16,
+  servicesHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  servicesList: {
+    flex: 1,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 16,
   },
   serviceCard: {
     flexDirection: 'row',
@@ -317,7 +324,8 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   listContent: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   emptyContainer: {
     flex: 1,
