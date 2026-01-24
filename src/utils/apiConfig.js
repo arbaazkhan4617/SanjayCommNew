@@ -33,8 +33,8 @@ const getApiBaseUrl = () => {
     // iOS simulator uses localhost
     return 'http://localhost:8080/api';
   }
-  // Production URL - Update this with your Railway backend URL
-  return 'https://your-app-name.railway.app/api';
+  // Production URL - Railway backend
+  return 'https://sanjaycommnew-production.up.railway.app/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
