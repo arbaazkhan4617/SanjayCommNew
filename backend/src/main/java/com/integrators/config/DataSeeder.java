@@ -30,18 +30,29 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        System.out.println("========================================");
+        System.out.println("Starting Data Seeder...");
+        System.out.println("========================================");
+        
         // Always seed users (check separately)
         seedDefaultUsers();
         
         // Seed products only if database is empty
-        if (serviceRepository.count() > 0) {
+        long serviceCount = serviceRepository.count();
+        System.out.println("Current services in database: " + serviceCount);
+        
+        if (serviceCount > 0) {
             System.out.println("Products already seeded. Skipping product seeding...");
+            System.out.println("========================================");
             return;
         }
 
-        System.out.println("Seeding database with product data...");
+        System.out.println("Database is empty. Seeding database with product data...");
+        System.out.println("This may take a few moments...");
         seedData();
-        System.out.println("Database seeding completed!");
+        System.out.println("========================================");
+        System.out.println("Database seeding completed successfully!");
+        System.out.println("========================================");
     }
 
     private void seedDefaultUsers() {
