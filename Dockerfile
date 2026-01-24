@@ -1,17 +1,13 @@
-# Use Maven and JDK 17 for building
-FROM nixos/nix:latest AS builder
+# Build stage
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# Install Maven and JDK 17 using Nix
-RUN nix-env -iA nixpkgs.maven nixpkgs.jdk17
-
-# Copy backend source
-COPY backend/pom.xml backend/pom.xml
-COPY backend/src backend/src
+# Copy Maven files
+COPY backend/pom.xml .
+COPY backend/src ./src
 
 # Build the application
-WORKDIR /app/backend
 RUN mvn clean package -DskipTests
 
 # Runtime stage
@@ -20,7 +16,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the built JAR
-COPY --from=builder /app/backend/target/integrators-backend-1.0.0.jar app.jar
+COPY --from=builder /app/target/integrators-backend-1.0.0.jar app.jar
 
 # Expose port
 EXPOSE 8080
