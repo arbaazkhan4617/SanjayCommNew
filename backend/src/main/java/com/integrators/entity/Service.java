@@ -11,15 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "services")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Service {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,6 +66,18 @@ public class Service {
 	}
 
 	public void setProductCategories(List<ProductCategory> productCategories) {
+		this.productCategories = productCategories;
+	}
+
+	// Constructors
+	public Service() {
+	}
+
+	public Service(Long id, String name, String icon, String description, List<ProductCategory> productCategories) {
+		this.id = id;
+		this.name = name;
+		this.icon = icon;
+		this.description = description;
 		this.productCategories = productCategories;
 	}
 

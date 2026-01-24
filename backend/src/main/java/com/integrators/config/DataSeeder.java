@@ -2,7 +2,6 @@ package com.integrators.config;
 
 import com.integrators.entity.*;
 import com.integrators.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
     private final ServiceRepository serviceRepository;
     private final ProductCategoryRepository categoryRepository;
@@ -19,6 +17,16 @@ public class DataSeeder implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    public DataSeeder(ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository, BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+        this.serviceRepository = serviceRepository;
+        this.categoryRepository = categoryRepository;
+        this.brandRepository = brandRepository;
+        this.modelRepository = modelRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void run(String... args) {
@@ -39,18 +47,26 @@ public class DataSeeder implements CommandLineRunner {
     private void seedDefaultUsers() {
         System.out.println("Checking and creating default users...");
         
-        // Create default admin user if not exists
-        if (!userRepository.existsByEmail("admin@integrators.com")) {
-            User adminUser = new User();
+        // Create or update default admin user
+        User adminUser = userRepository.findByEmail("admin@integrators.com").orElse(null);
+        if (adminUser == null) {
+            adminUser = new User();
             adminUser.setName("Admin User");
             adminUser.setEmail("admin@integrators.com");
             adminUser.setPassword(passwordEncoder.encode("admin123"));
             adminUser.setPhone("9876543210");
+            adminUser.setRole("ADMIN");
             userRepository.save(adminUser);
             System.out.println("✓ Default admin user created:");
             System.out.println("  Email: admin@integrators.com");
             System.out.println("  Password: admin123");
         } else {
+            // Update role if it's not ADMIN
+            if (!"ADMIN".equals(adminUser.getRole())) {
+                adminUser.setRole("ADMIN");
+                userRepository.save(adminUser);
+                System.out.println("✓ Admin user role updated to ADMIN");
+            }
             System.out.println("Admin user already exists: admin@integrators.com");
         }
 
@@ -61,6 +77,7 @@ public class DataSeeder implements CommandLineRunner {
             testUser.setEmail("test@test.com");
             testUser.setPassword(passwordEncoder.encode("test123"));
             testUser.setPhone("9876543211");
+            testUser.setRole("USER");
             userRepository.save(testUser);
             System.out.println("✓ Default test user created:");
             System.out.println("  Email: test@test.com");
@@ -68,80 +85,61 @@ public class DataSeeder implements CommandLineRunner {
         } else {
             System.out.println("Test user already exists: test@test.com");
         }
+
+        // Create default sales user if not exists
+        if (!userRepository.existsByEmail("sales@sanjaycomm.com")) {
+            User salesUser = new User();
+            salesUser.setName("Sales Team");
+            salesUser.setEmail("sales@sanjaycomm.com");
+            salesUser.setPassword(passwordEncoder.encode("sales123"));
+            salesUser.setPhone("9179500312");
+            salesUser.setRole("SALES");
+            userRepository.save(salesUser);
+            System.out.println("✓ Default sales user created:");
+            System.out.println("  Email: sales@sanjaycomm.com");
+            System.out.println("  Password: sales123");
+        } else {
+            System.out.println("Sales user already exists: sales@sanjaycomm.com");
+        }
         
         System.out.println("User seeding completed!");
     }
 
     private void seedData() {
-        // Create Services
-        Service cctvService = createService("CCTV", "videocam", "Surveillance systems for security");
-        Service computersService = createService("Computers", "laptop", "Computer systems and accessories");
-        Service networkingService = createService("Networking", "wifi", "Networking solutions");
-        Service accessControlService = createService("Access Controls", "shield-checkmark", "Access control systems");
-        Service fireAlarmService = createService("Fire Alarms", "flame", "Fire detection and alarm systems");
-        Service videoDoorPhoneService = createService("Video Door Phones", "call", "Video door phone systems");
-        Service solarService = createService("Solar Power", "sunny", "Solar power plant solutions");
-        Service audioVideoService = createService("Audio Video", "musical-notes", "Audio video solutions");
-        Service powerSupplyService = createService("Power Supply", "battery", "Power supply and UPS systems");
-        Service accessoriesService = createService("Accessories", "construct", "CCTV and security accessories");
-        Service epabxService = createService("EPABX & Intercom", "call", "EPABX and intercom systems");
+        // Create Sales Service (Main service for all products)
+        Service salesService = createService("Sales", "storefront", "Complete range of security and technology products");
 
-        // Create Categories
-        ProductCategory ipCameras = createCategory("IP Cameras", cctvService);
-        ProductCategory ptzCameras = createCategory("PTZ Cameras", cctvService);
-        ProductCategory wifiCameras = createCategory("WiFi Cameras", cctvService);
-        ProductCategory bulletCameras = createCategory("Bullet Cameras", cctvService);
-        ProductCategory domeCameras = createCategory("Dome Cameras", cctvService);
-        ProductCategory dvrSystems = createCategory("DVR Systems", cctvService);
-        ProductCategory cctvAccessories = createCategory("CCTV Accessories", cctvService);
+        // CCTV Systems - Two main types
+        ProductCategory ipHdSystems = createCategory("IP HD Systems", salesService);
+        ProductCategory analogHdSystems = createCategory("Analog HD Systems", salesService);
         
-        ProductCategory desktopPC = createCategory("Desktop PCs", computersService);
-        ProductCategory printers = createCategory("Printers", computersService);
-        ProductCategory monitors = createCategory("Monitors", computersService);
-        ProductCategory computerAccessories = createCategory("Computer Accessories", computersService);
+        // Fire Alarm Systems - Two types
+        ProductCategory conventionalFireAlarms = createCategory("Conventional Fire Alarm Systems", salesService);
+        ProductCategory addressableFireAlarms = createCategory("Analogue Addressable Fire Alarm Systems", salesService);
         
-        ProductCategory networkSwitches = createCategory("Network Switches", networkingService);
-        ProductCategory routers = createCategory("Routers", networkingService);
-        ProductCategory cables = createCategory("Cables", networkingService);
-        ProductCategory poeSwitches = createCategory("POE Switches", networkingService);
+        // Biometrics
+        ProductCategory biometrics = createCategory("Biometrics", salesService);
         
-        ProductCategory biometricDevices = createCategory("Biometric Devices", accessControlService);
-        ProductCategory doorLocks = createCategory("Door Locks", accessControlService);
-        ProductCategory faceMachines = createCategory("Face Recognition", accessControlService);
+        // Video Door Phones - Two types
+        ProductCategory analogueVDP = createCategory("Analogue Video Door Phones", salesService);
+        ProductCategory ipVDP = createCategory("IP Video Door Phones", salesService);
         
-        ProductCategory firePanels = createCategory("Fire Alarm Panels", fireAlarmService);
-        ProductCategory smokeDetectors = createCategory("Smoke Detectors", fireAlarmService);
+        // Electronic Locks
+        ProductCategory electronicLocks = createCategory("Electronic Locks", salesService);
         
-        ProductCategory videoDoorPhones = createCategory("Video Door Phones", videoDoorPhoneService);
-        
-        ProductCategory solarInverters = createCategory("Solar Inverters", solarService);
-        ProductCategory solarBatteries = createCategory("Solar Batteries", solarService);
-        ProductCategory solarCables = createCategory("Solar Cables", solarService);
-        
-        ProductCategory speakers = createCategory("Speakers", audioVideoService);
-        ProductCategory audioBoxes = createCategory("Audio Boxes", audioVideoService);
-        
-        ProductCategory adapters = createCategory("Adapters", powerSupplyService);
-        ProductCategory ups = createCategory("UPS", powerSupplyService);
-        ProductCategory powerSupplies = createCategory("Power Supplies", powerSupplyService);
-        
-        ProductCategory connectors = createCategory("Connectors", accessoriesService);
-        ProductCategory brackets = createCategory("Brackets", accessoriesService);
-        ProductCategory storage = createCategory("Storage", accessoriesService);
-        ProductCategory epabxAccessories = createCategory("EPABX Accessories", epabxService);
+        // GPS Devices
+        ProductCategory gpsDevices = createCategory("GPS Devices for Vehicles", salesService);
 
-        // Create Brands and Products
-        seedCCTVProducts(cctvService, ipCameras, ptzCameras, wifiCameras, bulletCameras, domeCameras, dvrSystems, cctvAccessories);
-        seedComputerProducts(computersService, desktopPC, printers, monitors, computerAccessories);
-        seedNetworkingProducts(networkingService, networkSwitches, routers, cables, poeSwitches);
-        seedAccessControlProducts(accessControlService, biometricDevices, doorLocks, faceMachines);
-        seedFireAlarmProducts(fireAlarmService, firePanels, smokeDetectors);
-        seedVideoDoorPhoneProducts(videoDoorPhoneService, videoDoorPhones);
-        seedSolarProducts(solarService, solarInverters, solarBatteries, solarCables);
-        seedAudioVideoProducts(audioVideoService, speakers, audioBoxes);
-        seedPowerSupplyProducts(powerSupplyService, adapters, ups, powerSupplies);
-        seedAccessoriesProducts(accessoriesService, connectors, brackets, storage, cctvAccessories, epabxAccessories);
-        seedEPABXProducts(epabxService, epabxAccessories);
+        // Seed all products
+        seedIPHDSystems(ipHdSystems);
+        seedAnalogHDSystems(analogHdSystems);
+        seedConventionalFireAlarms(conventionalFireAlarms);
+        seedAddressableFireAlarms(addressableFireAlarms);
+        seedBiometrics(biometrics);
+        seedAnalogueVDP(analogueVDP);
+        seedIPVDP(ipVDP);
+        seedElectronicLocks(electronicLocks);
+        seedGPSDevices(gpsDevices);
     }
 
     private Service createService(String name, String icon, String description) {
@@ -1134,5 +1132,404 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedEPABXProducts(Service epabxService, ProductCategory epabxAccessories) {
         // EPABX accessories are already covered in accessories
+    }
+
+    // ========== NEW SEEDING METHODS FOR CLIENT REQUIREMENTS ==========
+    
+    private void seedIPHDSystems(ProductCategory ipHdSystems) {
+        // IP HD System Components: IP Cameras, NVR, POE Switches, CAT 6 Cables, Hard Disk, Connectors
+        // Brands: Prama, CP Plus, Hikvision, Trueview, Consistent
+        
+        // IP Cameras - Various Types
+        // Dome Cameras
+        Brand prama = createBrand("Prama", ipHdSystems);
+        Brand cpPlus = createBrand("CP Plus", ipHdSystems);
+        Brand hikvision = createBrand("Hikvision", ipHdSystems);
+        Brand trueview = createBrand("Trueview", ipHdSystems);
+        Brand consistent = createBrand("Consistent", ipHdSystems);
+        
+        // Dome Camera - Prama
+        Model pramaDome = createModel("Dome Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", prama);
+        createProduct(pramaDome, "Prama IP HD Dome Camera",
+            "IP HD dome camera for indoor use. Features digital image processor for superior quality, PoE support, and excellent low-light performance.",
+            new BigDecimal("8500"), new BigDecimal("10000"), true, 4.5, 120,
+            Map.of("Resolution", "4MP", "Type", "Dome - Indoor", "Power", "PoE", "Image Quality", "Digital Processor",
+                   "Night Vision", "IR up to 30m", "Warranty", "2 Years On-site"));
+        
+        // Bullet Camera - Hikvision
+        Model hikvisionBullet = createModel("Bullet Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        createProduct(hikvisionBullet, "Hikvision IP HD Bullet Camera",
+            "IP HD bullet camera for outdoor use. Weatherproof design with digital image processing for superior image quality.",
+            new BigDecimal("9500"), new BigDecimal("12000"), true, 4.7, 200,
+            Map.of("Resolution", "4MP", "Type", "Bullet - Outdoor", "Power", "PoE", "Weatherproof", "IP67",
+                   "Image Quality", "Digital Processor", "Warranty", "2 Years On-site"));
+        
+        // Varifocal Camera - Prama
+        Model pramaVarifocal = createModel("Varifocal Zoom Lens IR Camera", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", prama);
+        createProduct(pramaVarifocal, "Prama Varifocal Zoom Lens IR Camera",
+            "Varifocal IP camera for long distance monitoring. Adjustable focal length with powerful IR night vision.",
+            new BigDecimal("12000"), new BigDecimal("15000"), true, 4.6, 95,
+            Map.of("Resolution", "4MP", "Type", "Varifocal", "Lens", "2.8-12mm", "Night Vision", "IR up to 50m",
+                   "Power", "PoE", "Warranty", "2 Years On-site"));
+        
+        // PTZ Camera - Hikvision
+        Model hikvisionPTZ = createModel("PTZ Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        createProduct(hikvisionPTZ, "Hikvision IP HD PTZ Camera",
+            "Advanced PTZ camera with 360° rotation and zoom. Perfect for large area surveillance with digital image processing.",
+            new BigDecimal("45000"), new BigDecimal("55000"), true, 4.8, 85,
+            Map.of("Resolution", "4MP", "Type", "PTZ", "Zoom", "20x Optical", "Rotation", "360°",
+                   "Power", "PoE+", "Warranty", "2 Years On-site"));
+        
+        // WiFi Camera - CP Plus
+        Model cpPlusWiFi = createModel("WiFi Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", cpPlus);
+        createProduct(cpPlusWiFi, "CP Plus IP HD WiFi Camera",
+            "Wireless IP HD camera with WiFi connectivity. Easy installation with mobile app support.",
+            new BigDecimal("6500"), new BigDecimal("8000"), true, 4.4, 150,
+            Map.of("Resolution", "2MP", "Type", "WiFi", "Connectivity", "WiFi 802.11n", "Mobile App", "Yes",
+                   "Power", "12VDC", "Warranty", "2 Years On-site"));
+        
+        // 4G Camera - Trueview
+        Model trueview4G = createModel("4G Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", trueview);
+        createProduct(trueview4G, "Trueview IP HD 4G Camera",
+            "4G enabled IP HD camera for remote locations. No internet wiring required, works on 4G network.",
+            new BigDecimal("18000"), new BigDecimal("22000"), true, 4.5, 100,
+            Map.of("Resolution", "4MP", "Type", "4G Camera", "Connectivity", "4G LTE", "Power", "12VDC",
+                   "Mobile App", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Solar Camera - Consistent
+        Model consistentSolar = createModel("Solar Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", consistent);
+        createProduct(consistentSolar, "Consistent IP HD Solar Camera",
+            "Solar-powered IP HD camera with battery backup. Perfect for locations without power supply.",
+            new BigDecimal("25000"), new BigDecimal("30000"), true, 4.6, 80,
+            Map.of("Resolution", "4MP", "Type", "Solar Camera", "Power", "Solar + Battery", "Weatherproof", "IP67",
+                   "Mobile App", "Yes", "Warranty", "2 Years On-site"));
+        
+        // NVR (Network Video Recorder) - Hikvision
+        Model hikvisionNVR = createModel("NVR 16 Channel", "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300", hikvision);
+        createProduct(hikvisionNVR, "Hikvision 16 Channel NVR",
+            "Network Video Recorder for IP HD systems. Supports up to 16 IP cameras with H.265+ compression.",
+            new BigDecimal("25000"), new BigDecimal("30000"), true, 4.7, 150,
+            Map.of("Channels", "16", "Type", "NVR", "Compression", "H.265+", "HDD Support", "Up to 8TB",
+                   "Mobile App", "Yes", "Warranty", "2 Years On-site"));
+        
+        // POE Switch - Rova
+        Brand rova = createBrand("Rova", ipHdSystems);
+        Model rovaPOE = createModel("POE Switch 16 Port", "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300", rova);
+        createProduct(rovaPOE, "Rova 16 Port POE Switch",
+            "16-port POE switch for IP HD systems. Provides power and data over single CAT 6 cable.",
+            new BigDecimal("18000"), new BigDecimal("22000"), true, 4.5, 200,
+            Map.of("Ports", "16 POE", "Power Budget", "300W", "Standards", "IEEE 802.3af/at",
+                   "Uplink", "2 SFP", "Warranty", "2 Years On-site"));
+        
+        // CAT 6 Cable - Olive
+        Brand olive = createBrand("Olive", ipHdSystems);
+        Model oliveCat6 = createModel("CAT 6 Cable", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", olive);
+        createProduct(oliveCat6, "Olive CAT 6 Outdoor Cable",
+            "CAT 6 cable for digital data transmission in IP HD systems. Weatherproof design for outdoor use.",
+            new BigDecimal("45"), new BigDecimal("55"), true, 4.5, 200,
+            Map.of("Type", "CAT 6", "Length", "305 meters", "Outdoor", "Yes", "UV Protection", "Yes",
+                   "Weatherproof", "IP65", "Warranty", "2 Years"));
+        
+        // Hard Disk - WD
+        Brand wd = createBrand("WD", ipHdSystems);
+        Model wdHDD = createModel("Surveillance Hard Disk 2TB", "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300", wd);
+        createProduct(wdHDD, "WD Surveillance Hard Disk 2TB",
+            "Surveillance-grade hard disk for NVR systems. Designed for 24/7 operation with excellent reliability.",
+            new BigDecimal("5500"), new BigDecimal("6500"), true, 4.7, 400,
+            Map.of("Capacity", "2TB", "Type", "Surveillance HDD", "RPM", "5400", "Interface", "SATA 6Gb/s",
+                   "Workload", "24/7", "Warranty", "3 Years"));
+        
+        // Connectors - Hi-Focus
+        Brand hiFocus = createBrand("Hi-Focus", ipHdSystems);
+        Model hiFocusConnector = createModel("BNC Connector", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", hiFocus);
+        createProduct(hiFocusConnector, "Hi-Focus BNC Connector",
+            "High-quality BNC connector for CCTV installations. Gold-plated contacts for reliable connections.",
+            new BigDecimal("50"), new BigDecimal("60"), true, 4.4, 500,
+            Map.of("Type", "BNC Connector", "Gold Plated", "Yes", "Pack", "10 pieces", "Installation", "Crimp Type",
+                   "Warranty", "1 Year"));
+    }
+    
+    private void seedAnalogHDSystems(ProductCategory analogHdSystems) {
+        // Analog HD System Components: Analog Camera, DVR, 3+1 Cable, Hard Disk, Connectors
+        // Used for non-commercial/residential use - Economic budget solution
+        
+        Brand prama = createBrand("Prama", analogHdSystems);
+        Brand cpPlus = createBrand("CP Plus", analogHdSystems);
+        Brand hikvision = createBrand("Hikvision", analogHdSystems);
+        Brand trueview = createBrand("Trueview", analogHdSystems);
+        Brand consistent = createBrand("Consistent", analogHdSystems);
+        Brand hiFocus = createBrand("Hi-Focus", analogHdSystems);
+        Brand dahua = createBrand("Dahua", analogHdSystems);
+        Brand impact = createBrand("Impact", analogHdSystems);
+        
+        // Analog Dome Camera
+        Model pramaAnalogDome = createModel("Analog Dome Camera", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", prama);
+        createProduct(pramaAnalogDome, "Prama Analog HD Dome Camera",
+            "Analog HD dome camera for residential use. Cost-effective solution for home security with good image quality.",
+            new BigDecimal("4500"), new BigDecimal("5500"), true, 4.4, 200,
+            Map.of("Resolution", "2MP HD", "Type", "Dome - Indoor", "Power", "12VDC", "Use", "Residential/Non-commercial",
+                   "Warranty", "2 Years On-site"));
+        
+        // Analog Bullet Camera
+        Model hikvisionAnalogBullet = createModel("Analog Bullet Camera", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        createProduct(hikvisionAnalogBullet, "Hikvision Analog HD Bullet Camera",
+            "Analog HD bullet camera for outdoor residential use. Weatherproof design with excellent value for money.",
+            new BigDecimal("5000"), new BigDecimal("6000"), true, 4.5, 180,
+            Map.of("Resolution", "2MP HD", "Type", "Bullet - Outdoor", "Power", "12VDC", "Weatherproof", "IP66",
+                   "Use", "Residential/Non-commercial", "Warranty", "2 Years On-site"));
+        
+        // DVR Systems
+        Model cpPlusDVR = createModel("DVR 16 Channel", "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300", cpPlus);
+        createProduct(cpPlusDVR, "CP Plus 16 Channel DVR",
+            "16-channel DVR for analog HD systems. Perfect for residential and small commercial installations.",
+            new BigDecimal("20000"), new BigDecimal("25000"), true, 4.6, 150,
+            Map.of("Channels", "16", "Type", "DVR", "Compression", "H.265+", "HDD Support", "Up to 6TB",
+                   "Use", "Residential/Non-commercial", "Warranty", "2 Years On-site"));
+        
+        Model hiFocusDVR4 = createModel("DVR 4 Channel", "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=300", hiFocus);
+        createProduct(hiFocusDVR4, "Hi-Focus 4 Channel DVR",
+            "Compact 4-channel DVR for small residential installations. Economic solution for homes and small offices.",
+            new BigDecimal("8000"), new BigDecimal("10000"), true, 4.3, 200,
+            Map.of("Channels", "4", "Type", "DVR", "Compression", "H.264", "HDD Support", "Up to 2TB",
+                   "Use", "Residential/Non-commercial", "Warranty", "2 Years On-site"));
+        
+        // 3+1 Cable - HyNet
+        Brand hyNet = createBrand("HyNet", analogHdSystems);
+        Model hyNet3Plus1 = createModel("3+1 CCTV Cable", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", hyNet);
+        createProduct(hyNet3Plus1, "HyNet 3+1 CCTV Cable",
+            "3+1 CCTV cable combining video and power in single cable. Simplifies installation for analog systems.",
+            new BigDecimal("30"), new BigDecimal("35"), true, 4.3, 400,
+            Map.of("Type", "3+1 (3 Video + 1 Power)", "Length", "305 meters", "Gauge", "22 AWG",
+                   "Use", "Analog Systems", "Warranty", "1 Year"));
+        
+        // Hard Disk
+        Brand wd = createBrand("WD", analogHdSystems);
+        Model wdHDD = createModel("Surveillance Hard Disk 1TB", "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300", wd);
+        createProduct(wdHDD, "WD Surveillance Hard Disk 1TB",
+            "Surveillance hard disk for DVR systems. Reliable storage for analog HD recordings.",
+            new BigDecimal("3500"), new BigDecimal("4000"), true, 4.7, 500,
+            Map.of("Capacity", "1TB", "Type", "Surveillance HDD", "RPM", "5400", "Interface", "SATA 6Gb/s",
+                   "Workload", "24/7", "Warranty", "3 Years"));
+        
+        // Connectors
+        Model hiFocusBNC = createModel("BNC Connector", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", hiFocus);
+        createProduct(hiFocusBNC, "Hi-Focus BNC Connector",
+            "BNC connector for analog camera connections. Easy installation with reliable performance.",
+            new BigDecimal("50"), new BigDecimal("60"), true, 4.4, 500,
+            Map.of("Type", "BNC Connector", "Gold Plated", "Yes", "Pack", "10 pieces", "Warranty", "1 Year"));
+    }
+    
+    private void seedConventionalFireAlarms(ProductCategory conventionalFireAlarms) {
+        // Conventional Fire Alarm Systems - Economic, small premises, no specific location
+        // Brands: Agni, Notifier, Bosch, Honeywell, Ravel
+        
+        Brand agni = createBrand("Agni", conventionalFireAlarms);
+        Brand notifier = createBrand("Notifier", conventionalFireAlarms);
+        Brand bosch = createBrand("Bosch", conventionalFireAlarms);
+        Brand honeywell = createBrand("Honeywell", conventionalFireAlarms);
+        Brand ravel = createBrand("Ravel", conventionalFireAlarms);
+        
+        // Fire Alarm Panel - Agni
+        Model agniPanel = createModel("Conventional Fire Panel", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", agni);
+        createProduct(agniPanel, "Agni Conventional Fire Alarm Panel",
+            "Economic conventional fire alarm panel for small premises. Zone-based detection without specific location identification.",
+            new BigDecimal("25000"), new BigDecimal("30000"), true, 4.5, 120,
+            Map.of("Type", "Conventional", "Zones", "Up to 8 Zones", "Location", "Zone-based (No specific location)",
+                   "Use", "Small Premises", "Economic", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Fire Alarm Panel - Bosch
+        Model boschPanel = createModel("Conventional Fire Panel", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", bosch);
+        createProduct(boschPanel, "Bosch Conventional Fire Alarm Panel",
+            "Reliable conventional fire alarm system. Cost-effective solution for small to medium premises.",
+            new BigDecimal("30000"), new BigDecimal("35000"), true, 4.6, 100,
+            Map.of("Type", "Conventional", "Zones", "Up to 12 Zones", "Standards", "EN54 Certified",
+                   "Use", "Small Premises", "Economic", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Smoke Detector - Notifier
+        Model notifierSmoke = createModel("Smoke Detector", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", notifier);
+        createProduct(notifierSmoke, "Notifier Conventional Smoke Detector",
+            "Conventional smoke detector for fire alarm systems. Reliable detection with easy installation.",
+            new BigDecimal("2500"), new BigDecimal("3000"), true, 4.5, 200,
+            Map.of("Type", "Conventional Smoke Detector", "Voltage", "12VDC", "Standards", "EN54",
+                   "Installation", "Easy", "Warranty", "2 Years"));
+    }
+    
+    private void seedAddressableFireAlarms(ProductCategory addressableFireAlarms) {
+        // Analogue Addressable Fire Alarm Systems - Exact location, costly, precise
+        // Brands: Agni, Notifier, Bosch, Honeywell, Ravel
+        
+        Brand agni = createBrand("Agni", addressableFireAlarms);
+        Brand notifier = createBrand("Notifier", addressableFireAlarms);
+        Brand bosch = createBrand("Bosch", addressableFireAlarms);
+        Brand honeywell = createBrand("Honeywell", addressableFireAlarms);
+        Brand ravel = createBrand("Ravel", addressableFireAlarms);
+        
+        // Addressable Fire Panel - Bosch
+        Model boschAddressable = createModel("Addressable Fire Panel", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", bosch);
+        createProduct(boschAddressable, "Bosch Analogue Addressable Fire Alarm Panel",
+            "Advanced analogue addressable fire alarm system providing exact location of events. Precise detection for critical applications.",
+            new BigDecimal("80000"), new BigDecimal("100000"), true, 4.8, 80,
+            Map.of("Type", "Analogue Addressable", "Devices", "Up to 250 Addressable", "Location", "Exact Location",
+                   "Use", "Precise/Critical Applications", "Cost", "High", "Warranty", "2 Years On-site"));
+        
+        // Addressable Fire Panel - Honeywell
+        Model honeywellAddressable = createModel("Addressable Fire Panel", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", honeywell);
+        createProduct(honeywellAddressable, "Honeywell Analogue Addressable Fire Alarm Panel",
+            "Professional addressable fire alarm system with exact device location. Ideal for large commercial buildings.",
+            new BigDecimal("90000"), new BigDecimal("110000"), true, 4.7, 70,
+            Map.of("Type", "Analogue Addressable", "Devices", "Up to 500 Addressable", "Location", "Exact Location",
+                   "Use", "Large Commercial", "Cost", "High", "Warranty", "2 Years On-site"));
+        
+        // Addressable Smoke Detector - Notifier
+        Model notifierAddressable = createModel("Addressable Smoke Detector", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", notifier);
+        createProduct(notifierAddressable, "Notifier Addressable Smoke Detector",
+            "Addressable smoke detector with exact location identification. Part of addressable fire alarm system.",
+            new BigDecimal("4500"), new BigDecimal("5500"), true, 4.6, 150,
+            Map.of("Type", "Addressable Smoke Detector", "Location", "Exact Location ID", "Standards", "EN54",
+                   "Installation", "Loop Wiring", "Warranty", "2 Years"));
+    }
+    
+    private void seedBiometrics(ProductCategory biometrics) {
+        // Biometrics - Uses: Access Control, Time & Attendance, Visitor Management, Employee Identification
+        // Brands: Essl, Secureye, Matrix, Hikvision, Realtime
+        
+        Brand essl = createBrand("Essl", biometrics);
+        Brand secureye = createBrand("Secureye", biometrics);
+        Brand matrix = createBrand("Matrix", biometrics);
+        Brand hikvision = createBrand("Hikvision", biometrics);
+        Brand realtime = createBrand("Realtime", biometrics);
+        
+        // Biometric Device - Essl
+        Model esslBio = createModel("Biometric Device", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", essl);
+        createProduct(esslBio, "Essl Biometric Device",
+            "Fingerprint-based biometric system for access control and time & attendance. Features large capacity and cloud sync.",
+            new BigDecimal("18000"), new BigDecimal("22000"), true, 4.6, 250,
+            Map.of("Type", "Fingerprint Biometric", "Capacity", "3000 Fingerprints", "Uses", "Access Control, Time & Attendance",
+                   "Display", "2.8\" Color LCD", "Cloud Sync", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Face Recognition - Hikvision
+        Model hikvisionFace = createModel("Face Recognition Machine", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", hikvision);
+        createProduct(hikvisionFace, "Hikvision Biometric Face Machine",
+            "Advanced face recognition system for access control and visitor management. Fast and accurate identification.",
+            new BigDecimal("35000"), new BigDecimal("45000"), true, 4.8, 120,
+            Map.of("Type", "Face Recognition", "Capacity", "5000 Faces", "Uses", "Access Control, Visitor Management",
+                   "Speed", "< 1 second", "AI Technology", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Fingerprint Scanner with Face ID - Essl
+        Model esslDual = createModel("Scanner with Face ID", "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=300", essl);
+        createProduct(esslDual, "Essl Fingerprint Scanner with Face ID",
+            "Dual biometric scanner supporting both fingerprint and face recognition. Perfect for high-security access control.",
+            new BigDecimal("22000"), new BigDecimal("28000"), true, 4.6, 140,
+            Map.of("Type", "Fingerprint + Face", "Capacity", "5000 Users", "Uses", "Access Control, Employee ID",
+                   "Speed", "< 0.5 seconds", "Display", "Color LCD", "Warranty", "2 Years On-site"));
+    }
+    
+    private void seedAnalogueVDP(ProductCategory analogueVDP) {
+        // Analogue VDP - Economic, single to 3 doors, works with outdoor/indoor station
+        // Brands: Hikvision, CP Plus, Secureye, Honeywell
+        
+        Brand hikvision = createBrand("Hikvision", analogueVDP);
+        Brand cpPlus = createBrand("CP Plus", analogueVDP);
+        Brand secureye = createBrand("Secureye", analogueVDP);
+        Brand honeywell = createBrand("Honeywell", analogueVDP);
+        
+        // Analogue VDP - Hikvision
+        Model hikvisionVDP = createModel("Analogue Video Door Phone", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", hikvision);
+        createProduct(hikvisionVDP, "Hikvision Analogue Video Door Phone",
+            "Economic analogue video door phone system. Works with outdoor and indoor station for single to three doors. Speak and talk to visitors with electronic door lock support.",
+            new BigDecimal("15000"), new BigDecimal("18000"), true, 4.5, 150,
+            Map.of("Type", "Analogue VDP", "Doors", "1-3 Doors", "Stations", "Outdoor + Indoor", "Audio", "Two-way",
+                   "Door Lock", "Electronic Lock Support", "Economic", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Analogue VDP - CP Plus
+        Model cpPlusVDP = createModel("Analogue Video Door Phone", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", cpPlus);
+        createProduct(cpPlusVDP, "CP Plus Analogue Video Door Phone",
+            "Cost-effective analogue video door phone. Perfect for residential use with clear video and audio communication.",
+            new BigDecimal("12000"), new BigDecimal("15000"), true, 4.4, 180,
+            Map.of("Type", "Analogue VDP", "Doors", "1-3 Doors", "Resolution", "720p", "Audio", "Two-way",
+                   "Door Lock", "Electronic Lock Support", "Warranty", "2 Years On-site"));
+    }
+    
+    private void seedIPVDP(ProductCategory ipVDP) {
+        // IP VDP - Advanced, mobile app, remote unlock, internet connectivity
+        // Brands: Hikvision, CP Plus, Secureye, Honeywell
+        
+        Brand hikvision = createBrand("Hikvision", ipVDP);
+        Brand cpPlus = createBrand("CP Plus", ipVDP);
+        Brand secureye = createBrand("Secureye", ipVDP);
+        Brand honeywell = createBrand("Honeywell", ipVDP);
+        
+        // IP VDP - Hikvision
+        Model hikvisionIPVDP = createModel("IP Video Door Phone", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", hikvision);
+        createProduct(hikvisionIPVDP, "Hikvision IP Video Door Phone",
+            "Advanced IP video door phone with mobile app connectivity. Connect via internet, speak and talk to visitors through video call on mobile application, and remotely unlock door with electronic lock.",
+            new BigDecimal("25000"), new BigDecimal("30000"), true, 4.7, 160,
+            Map.of("Type", "IP VDP", "Connectivity", "Internet/Mobile App", "Features", "Video Call, Remote Unlock",
+                   "Mobile App", "Yes", "Remote Access", "Yes", "Door Lock", "Remote Electronic Lock", "Warranty", "2 Years On-site"));
+        
+        // IP VDP - True View
+        Brand trueview = createBrand("True View", ipVDP);
+        Model trueviewIPVDP = createModel("WiFi Video Doorbell", "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300", trueview);
+        createProduct(trueviewIPVDP, "True View WiFi Video Doorbell",
+            "Smart WiFi video doorbell with mobile app. Features two-way audio, motion detection, and remote door unlock capability.",
+            new BigDecimal("12000"), new BigDecimal("15000"), true, 4.6, 180,
+            Map.of("Type", "IP VDP - WiFi", "Connectivity", "WiFi + Mobile App", "Features", "Video Call, Remote Unlock",
+                   "Motion Detection", "Yes", "Night Vision", "Yes", "Warranty", "2 Years On-site"));
+    }
+    
+    private void seedElectronicLocks(ProductCategory electronicLocks) {
+        // Electronic Locks - Features: Keyless Entry, Mobile App Control, Remote Access, PIN Code, Biometric Integration, Auto-lock, Access Logs, Guest Access, Battery Backup, Tamper Alerts
+        // Brands: Essl, Yale, Godrej
+        
+        Brand essl = createBrand("Essl", electronicLocks);
+        Brand yale = createBrand("Yale", electronicLocks);
+        Brand godrej = createBrand("Godrej", electronicLocks);
+        
+        // Electronic Lock - Essl
+        Model esslLock = createModel("Biometric Door Lock", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", essl);
+        createProduct(esslLock, "Essl Biometric Electronic Door Lock",
+            "Smart biometric electronic door lock with keyless entry, mobile app control, PIN code access, and access logs. Features auto-lock, guest access management, and battery backup.",
+            new BigDecimal("25000"), new BigDecimal("30000"), true, 4.7, 180,
+            Map.of("Type", "Biometric Electronic Lock", "Features", "Keyless, Mobile App, PIN, Biometric, Auto-lock, Access Logs",
+                   "Battery", "Rechargeable", "Guest Access", "Yes", "Tamper Alert", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Electronic Lock - Yale
+        Model yaleLock = createModel("Smart Electronic Lock", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", yale);
+        createProduct(yaleLock, "Yale Smart Electronic Lock",
+            "Advanced smart electronic lock with remote access via mobile app. Features keyless entry, PIN code, biometric integration, and comprehensive access management.",
+            new BigDecimal("30000"), new BigDecimal("35000"), true, 4.8, 150,
+            Map.of("Type", "Smart Electronic Lock", "Features", "Keyless, Remote Access, Mobile App, PIN, Biometric",
+                   "Access Logs", "Yes", "Guest Access", "Yes", "Battery Backup", "Yes", "Warranty", "2 Years On-site"));
+        
+        // Electronic Lock - Godrej
+        Model godrejLock = createModel("Electronic Door Lock", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", godrej);
+        createProduct(godrejLock, "Godrej Electronic Door Lock",
+            "Reliable electronic door lock with keyless entry and PIN code access. Features auto-lock, access logs, and tamper alerts.",
+            new BigDecimal("20000"), new BigDecimal("25000"), true, 4.6, 200,
+            Map.of("Type", "Electronic Lock", "Features", "Keyless, PIN Code, Auto-lock, Access Logs",
+                   "Battery", "Rechargeable", "Tamper Alert", "Yes", "Warranty", "2 Years On-site"));
+    }
+    
+    private void seedGPSDevices(ProductCategory gpsDevices) {
+        // GPS Devices for Vehicles - New category
+        
+        Brand consistent = createBrand("Consistent", gpsDevices);
+        Brand mastel = createBrand("Mastel", gpsDevices);
+        
+        // GPS Device - Consistent
+        Model consistentGPS = createModel("GPS Vehicle Tracker", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", consistent);
+        createProduct(consistentGPS, "Consistent GPS Vehicle Tracker",
+            "GPS tracking device for vehicles with real-time location tracking, geofencing, and mobile app monitoring.",
+            new BigDecimal("8000"), new BigDecimal("10000"), true, 4.5, 120,
+            Map.of("Type", "GPS Vehicle Tracker", "Features", "Real-time Tracking, Geofencing, Mobile App",
+                   "Connectivity", "4G/GPS", "Battery", "Built-in", "Warranty", "2 Years On-site"));
+        
+        // GPS Device - Mastel
+        Model mastelGPS = createModel("GPS Vehicle Tracker", "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300", mastel);
+        createProduct(mastelGPS, "Mastel GPS Vehicle Tracker",
+            "Advanced GPS tracking device with speed monitoring, route history, and alert notifications.",
+            new BigDecimal("10000"), new BigDecimal("12000"), true, 4.6, 100,
+            Map.of("Type", "GPS Vehicle Tracker", "Features", "Real-time Tracking, Speed Monitoring, Route History",
+                   "Connectivity", "4G/GPS", "Alerts", "Yes", "Warranty", "2 Years On-site"));
     }
 }

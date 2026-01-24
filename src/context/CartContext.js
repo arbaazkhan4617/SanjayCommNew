@@ -48,7 +48,8 @@ export const CartProvider = ({ children }) => {
         name: item.product.name,
         price: parseFloat(item.product.price),
         originalPrice: item.product.originalPrice ? parseFloat(item.product.originalPrice) : null,
-        image: item.product.image || item.product.model?.image || 'https://via.placeholder.com/300x300?text=Product',
+        image: item.product.image || item.product.model?.image || item.model?.image || 'https://via.placeholder.com/300x300?text=Product',
+        category: item.product.category?.name || item.product.category || 'Product',
         quantity: item.quantity,
         product: item.product,
       }));

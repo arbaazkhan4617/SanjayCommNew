@@ -2,13 +2,6 @@ package com.integrators.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class RegisterRequest {
     @NotBlank(message = "Name is required")
     private String name;
@@ -51,6 +44,17 @@ public class RegisterRequest {
 	}
 
 	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	// Constructors
+	public RegisterRequest() {
+	}
+
+	public RegisterRequest(String name, String email, String password, String phone) {
+		this.name = name;
+		this.email = email;
+		this.password = password;
 		this.phone = phone;
 	}
 

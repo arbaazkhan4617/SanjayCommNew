@@ -4,12 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
 public class OrderDTO {
 	private Long id;
 	private List<OrderItemDTO> orderItems;
@@ -19,19 +13,53 @@ public class OrderDTO {
 	private String paymentMethod;
 	private LocalDateTime createdAt;
 
-	@Data
-	@NoArgsConstructor
 	public static class OrderItemDTO {
 		private Long id;
 		private ProductDTO product;
 		private Integer quantity;
 		private BigDecimal price;
 
+		// Constructors
+		public OrderItemDTO() {
+		}
+
 		public OrderItemDTO(Long id, ProductDTO product, Integer quantity, BigDecimal price) {
-			super();
 			this.id = id;
 			this.product = product;
 			this.quantity = quantity;
+			this.price = price;
+		}
+
+		// Getters and Setters
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public ProductDTO getProduct() {
+			return product;
+		}
+
+		public void setProduct(ProductDTO product) {
+			this.product = product;
+		}
+
+		public Integer getQuantity() {
+			return quantity;
+		}
+
+		public void setQuantity(Integer quantity) {
+			this.quantity = quantity;
+		}
+
+		public BigDecimal getPrice() {
+			return price;
+		}
+
+		public void setPrice(BigDecimal price) {
 			this.price = price;
 		}
 
@@ -93,9 +121,12 @@ public class OrderDTO {
 		this.createdAt = createdAt;
 	}
 
+	// Constructors
+	public OrderDTO() {
+	}
+
 	public OrderDTO(Long id, List<OrderItemDTO> orderItems, BigDecimal total, String status, String shippingAddress,
 			String paymentMethod, LocalDateTime createdAt) {
-		super();
 		this.id = id;
 		this.orderItems = orderItems;
 		this.total = total;

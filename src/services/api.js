@@ -102,4 +102,54 @@ export const orderAPI = {
     }),
 };
 
+export const serviceRequestAPI = {
+  getUserServiceRequests: (userId) => api.get(`/service-requests/${userId}`),
+  getServiceRequestById: (userId, requestId) => 
+    api.get(`/service-requests/${userId}/${requestId}`),
+  createServiceRequest: (data) => api.post('/service-requests/create', data),
+  updateServiceRequestStatus: (requestId, status) => 
+    api.put(`/service-requests/${requestId}/status`, null, { 
+      params: { status } 
+    }),
+};
+
+export const salesAPI = {
+  login: (email, password) => api.post('/auth/sales/login', { email, password }),
+  getDashboardStats: () => api.get('/sales/dashboard/stats'),
+  getRevenueChart: (days = 7) => api.get('/sales/dashboard/revenue-chart', { params: { days } }),
+  getOrdersChart: (days = 7) => api.get('/sales/dashboard/orders-chart', { params: { days } }),
+  getServiceRequestsChart: (days = 7) => api.get('/sales/dashboard/service-requests-chart', { params: { days } }),
+  getAllOrders: (status, sortBy) => api.get('/sales/orders', { params: { status, sortBy } }),
+  getAllServiceRequests: (status, sortBy) => api.get('/sales/service-requests', { params: { status, sortBy } }),
+  updateOrderStatus: (orderId, status) => api.put(`/sales/orders/${orderId}/status`, null, { params: { status } }),
+  updateServiceRequestStatus: (requestId, status) => api.put(`/sales/service-requests/${requestId}/status`, null, { params: { status } }),
+};
+
+export const adminAPI = {
+  login: (email, password) => api.post('/auth/admin/login', { email, password }),
+  // Products
+  getAllProducts: () => api.get('/admin/products'),
+  getProductById: (id) => api.get(`/admin/products/${id}`),
+  createProduct: (data) => api.post('/admin/products', data),
+  updateProduct: (id, data) => api.put(`/admin/products/${id}`, data),
+  deleteProduct: (id) => api.delete(`/admin/products/${id}`),
+  // Models
+  getAllModels: () => api.get('/admin/models'),
+  createModel: (data) => api.post('/admin/models', data),
+  updateModel: (id, data) => api.put(`/admin/models/${id}`, data),
+  deleteModel: (id) => api.delete(`/admin/models/${id}`),
+  // Brands
+  getAllBrands: () => api.get('/admin/brands'),
+  createBrand: (data) => api.post('/admin/brands', data),
+  updateBrand: (id, data) => api.put(`/admin/brands/${id}`, data),
+  deleteBrand: (id) => api.delete(`/admin/brands/${id}`),
+  // Categories
+  getAllCategories: () => api.get('/admin/categories'),
+  createCategory: (data) => api.post('/admin/categories', data),
+  updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
+  deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
+  // Services
+  getAllServices: () => api.get('/admin/services'),
+};
+
 export default api;

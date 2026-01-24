@@ -1,22 +1,52 @@
 package com.integrators.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
 public class ModelDTO {
 	private Long id;
 	private String name;
 	private String image;
 	private Long brandId;
 
+	// Constructors
+	public ModelDTO() {
+	}
+
 	public ModelDTO(Long id, String name, String image, Long brandId) {
-		super();
 		this.id = id;
 		this.name = name;
 		this.image = image;
+		this.brandId = brandId;
+	}
+
+	// Getters and Setters
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getImage() {
+		return image;
+	}
+
+	public void setImage(String image) {
+		this.image = image;
+	}
+
+	public Long getBrandId() {
+		return brandId;
+	}
+
+	public void setBrandId(Long brandId) {
 		this.brandId = brandId;
 	}
 

@@ -64,7 +64,15 @@ const HomeScreen = () => {
             <Ionicons name="search" size={24} color={COLORS.text} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Cart')}
+            onPress={() => {
+              // Navigate to Cart tab
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate('CartTab');
+              } else {
+                navigation.navigate('Cart');
+              }
+            }}
             style={styles.iconButton}
           >
             <Ionicons name="cart" size={24} color={COLORS.text} />

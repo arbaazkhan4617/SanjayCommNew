@@ -15,15 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "products")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Product {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -135,6 +128,23 @@ public class Product {
 	}
 
 	public void setSpecifications(Map<String, String> specifications) {
+		this.specifications = specifications;
+	}
+
+	// Constructors
+	public Product() {
+	}
+
+	public Product(Long id, String name, String description, BigDecimal price, BigDecimal originalPrice, Boolean inStock, Double rating, Integer reviews, Model model, Map<String, String> specifications) {
+		this.id = id;
+		this.name = name;
+		this.description = description;
+		this.price = price;
+		this.originalPrice = originalPrice;
+		this.inStock = inStock;
+		this.rating = rating;
+		this.reviews = reviews;
+		this.model = model;
 		this.specifications = specifications;
 	}
 

@@ -15,8 +15,6 @@ import com.integrators.repository.CartItemRepository;
 import com.integrators.repository.ProductRepository;
 import com.integrators.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 public class CartService {
 	private final CartItemRepository cartItemRepository;

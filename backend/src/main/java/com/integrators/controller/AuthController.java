@@ -4,7 +4,6 @@ import com.integrators.dto.LoginRequest;
 import com.integrators.dto.RegisterRequest;
 import com.integrators.entity.User;
 import com.integrators.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +15,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
-@RequiredArgsConstructor
 public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     
     @PostMapping("/register")
@@ -68,7 +71,74 @@ public class AuthController {
                 "id", user.getId(),
                 "name", user.getName(),
                 "email", user.getEmail(),
-                "phone", user.getPhone() != null ? user.getPhone() : ""
+                "phone", user.getPhone() != null ? user.getPhone() : "",
+                "role", user.getRole() != null ? user.getRole() : "USER"
+        ));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sales/login")
+    public ResponseEntity<Map<String, Object>> salesLogin(@Valid @RequestBody LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Check if user is sales or admin
+        String role = user.getRole() != null ? user.getRole() : "USER";
+        if (!role.equals("SALES") && !role.equals("ADMIN")) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Access denied. Sales login only.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "phone", user.getPhone() != null ? user.getPhone() : "",
+                "role", role
+        ));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/admin/login")
+    public ResponseEntity<Map<String, Object>> adminLogin(@Valid @RequestBody LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Invalid email or password");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Check if user is admin
+        String role = user.getRole() != null ? user.getRole() : "USER";
+        if (!role.equals("ADMIN")) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Access denied. Admin login only.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "phone", user.getPhone() != null ? user.getPhone() : "",
+                "role", role
         ));
         return ResponseEntity.ok(response);
     }

@@ -20,8 +20,6 @@ import com.integrators.repository.OrderRepository;
 import com.integrators.repository.ProductRepository;
 import com.integrators.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 public class OrderService {
 	private final OrderRepository orderRepository;

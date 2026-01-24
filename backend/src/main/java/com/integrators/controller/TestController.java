@@ -3,8 +3,6 @@ package com.integrators.controller;
 import com.integrators.entity.User;
 import com.integrators.repository.UserRepository;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +15,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/test")
 @CrossOrigin(origins = "*")
-@AllArgsConstructor
 public class TestController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public TestController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping("/users")
     public ResponseEntity<Map<String, Object>> getAllUsers() {
@@ -32,6 +34,7 @@ public class TestController {
                 userMap.put("name", user.getName());
                 userMap.put("email", user.getEmail());
                 userMap.put("phone", user.getPhone());
+                userMap.put("role", user.getRole() != null ? user.getRole() : "null");
                 return userMap;
             })
             .collect(Collectors.toList());
@@ -44,29 +47,43 @@ public class TestController {
 
     @PostMapping("/create-admin")
     public ResponseEntity<Map<String, Object>> createAdminUser() {
-        if (userRepository.existsByEmail("admin@integrators.com")) {
+        User adminUser = userRepository.findByEmail("admin@integrators.com").orElse(null);
+        
+        if (adminUser == null) {
+            adminUser = new User();
+            adminUser.setName("Admin User");
+            adminUser.setEmail("admin@integrators.com");
+            adminUser.setPassword(passwordEncoder.encode("admin123"));
+            adminUser.setPhone("9876543210");
+            adminUser.setRole("ADMIN");
+            adminUser = userRepository.save(adminUser);
+            
             Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Admin user already exists");
-            return ResponseEntity.badRequest().body(response);
+            response.put("success", true);
+            response.put("message", "Admin user created successfully");
+            response.put("user", Map.of(
+                "id", adminUser.getId(),
+                "name", adminUser.getName(),
+                "email", adminUser.getEmail(),
+                "role", adminUser.getRole() != null ? adminUser.getRole() : "null"
+            ));
+            return ResponseEntity.ok(response);
+        } else {
+            // Update existing admin user to ensure it has ADMIN role
+            adminUser.setRole("ADMIN");
+            adminUser = userRepository.save(adminUser);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Admin user updated with ADMIN role");
+            response.put("user", Map.of(
+                "id", adminUser.getId(),
+                "name", adminUser.getName(),
+                "email", adminUser.getEmail(),
+                "role", adminUser.getRole() != null ? adminUser.getRole() : "null"
+            ));
+            return ResponseEntity.ok(response);
         }
-
-        User adminUser = new User();
-        adminUser.setName("Admin User");
-        adminUser.setEmail("admin@integrators.com");
-        adminUser.setPassword(passwordEncoder.encode("admin123"));
-        adminUser.setPhone("9876543210");
-        adminUser = userRepository.save(adminUser);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Admin user created successfully");
-        response.put("user", Map.of(
-            "id", adminUser.getId(),
-            "name", adminUser.getName(),
-            "email", adminUser.getEmail()
-        ));
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/create-test")

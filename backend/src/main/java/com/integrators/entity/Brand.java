@@ -13,15 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "brands")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Brand {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,6 +59,17 @@ public class Brand {
 	}
 
 	public void setModels(List<Model> models) {
+		this.models = models;
+	}
+
+	// Constructors
+	public Brand() {
+	}
+
+	public Brand(Long id, String name, ProductCategory category, List<Model> models) {
+		this.id = id;
+		this.name = name;
+		this.category = category;
 		this.models = models;
 	}
 

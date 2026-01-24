@@ -3,13 +3,6 @@ package com.integrators.dto;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ProductResponseDTO {
 	private Long id;
 	private String name;
@@ -26,56 +19,128 @@ public class ProductResponseDTO {
 	private CategoryInfoDTO category;
 	private ServiceInfoDTO service;
 
-	@Data
-	@NoArgsConstructor
 	public static class ModelInfoDTO {
 		private Long id;
 		private String name;
 
+		// Constructors
+		public ModelInfoDTO() {
+		}
+
 		public ModelInfoDTO(Long id, String name) {
-			super();
 			this.id = id;
+			this.name = name;
+		}
+
+		// Getters and Setters
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
 			this.name = name;
 		}
 
 	}
 
-	@Data
-	@NoArgsConstructor
 	public static class BrandInfoDTO {
 		private Long id;
 		private String name;
 
+		// Constructors
+		public BrandInfoDTO() {
+		}
+
 		public BrandInfoDTO(Long id, String name) {
-			super();
 			this.id = id;
+			this.name = name;
+		}
+
+		// Getters and Setters
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
 			this.name = name;
 		}
 
 	}
 
-	@Data
-	@NoArgsConstructor
 	public static class CategoryInfoDTO {
 		private Long id;
 		private String name;
+		// Constructors
+		public CategoryInfoDTO() {
+		}
+
 		public CategoryInfoDTO(Long id, String name) {
-			super();
 			this.id = id;
+			this.name = name;
+		}
+
+		// Getters and Setters
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
 			this.name = name;
 		}
 
 	}
 
-	@Data
-	@NoArgsConstructor
 	public static class ServiceInfoDTO {
 		private Long id;
 		private String name;
 
+		// Constructors
+		public ServiceInfoDTO() {
+		}
+
 		public ServiceInfoDTO(Long id, String name) {
-			super();
 			this.id = id;
+			this.name = name;
+		}
+
+		// Getters and Setters
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
 			this.name = name;
 		}
 
@@ -190,6 +255,27 @@ public class ProductResponseDTO {
 	}
 
 	public void setService(ServiceInfoDTO service) {
+		this.service = service;
+	}
+
+	// Constructors
+	public ProductResponseDTO() {
+	}
+
+	public ProductResponseDTO(Long id, String name, String description, BigDecimal price, BigDecimal originalPrice, Boolean inStock, Double rating, Integer reviews, String image, Map<String, String> specifications, ModelInfoDTO model, BrandInfoDTO brand, CategoryInfoDTO category, ServiceInfoDTO service) {
+		this.id = id;
+		this.name = name;
+		this.description = description;
+		this.price = price;
+		this.originalPrice = originalPrice;
+		this.inStock = inStock;
+		this.rating = rating;
+		this.reviews = reviews;
+		this.image = image;
+		this.specifications = specifications;
+		this.model = model;
+		this.brand = brand;
+		this.category = category;
 		this.service = service;
 	}
 

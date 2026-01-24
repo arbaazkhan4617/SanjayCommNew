@@ -11,15 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +28,9 @@ public class User {
 	private String password;
 
 	private String phone;
+
+	@Column(nullable = false)
+	private String role = "USER"; // USER, SALES, ADMIN
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Order> orders;
@@ -96,6 +92,29 @@ public class User {
 
 	public void setCartItems(List<CartItem> cartItems) {
 		this.cartItems = cartItems;
+	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
+
+	// Constructors
+	public User() {
+	}
+
+	public User(Long id, String name, String email, String password, String phone, List<Order> orders, List<CartItem> cartItems) {
+		this.id = id;
+		this.name = name;
+		this.email = email;
+		this.password = password;
+		this.phone = phone;
+		this.orders = orders;
+		this.cartItems = cartItems;
+		this.role = "USER";
 	}
 
 }

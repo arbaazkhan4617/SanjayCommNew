@@ -30,41 +30,31 @@ const ProfileScreen = () => {
       id: '2',
       title: 'Addresses',
       icon: 'location-outline',
-      onPress: () => {
-        // TODO: Navigate to addresses screen
-      },
+      onPress: () => navigation.navigate('Addresses'),
     },
     {
       id: '3',
       title: 'Payment Methods',
       icon: 'card-outline',
-      onPress: () => {
-        // TODO: Navigate to payment methods screen
-      },
+      onPress: () => navigation.navigate('PaymentMethods'),
     },
     {
       id: '4',
       title: 'Notifications',
       icon: 'notifications-outline',
-      onPress: () => {
-        // TODO: Navigate to notifications screen
-      },
+      onPress: () => navigation.navigate('Notifications'),
     },
     {
       id: '5',
       title: 'Help & Support',
       icon: 'help-circle-outline',
-      onPress: () => {
-        // TODO: Navigate to help screen
-      },
+      onPress: () => navigation.navigate('HelpSupport'),
     },
     {
       id: '6',
       title: 'About',
       icon: 'information-circle-outline',
-      onPress: () => {
-        // TODO: Navigate to about screen
-      },
+      onPress: () => navigation.navigate('AboutUs'),
     },
   ];
 

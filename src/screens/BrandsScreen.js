@@ -73,13 +73,23 @@ const BrandsScreen = () => {
     <View style={styles.container}>
       <Header title={`${category?.name} - Brands`} />
       {brands.length > 0 ? (
-        <FlatList
-          data={brands}
-          renderItem={renderBrand}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        <>
+          <TouchableOpacity
+            style={styles.serviceRequestButton}
+            onPress={() => navigation.navigate('ServiceRequest', { service, category })}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="construct-outline" size={24} color={COLORS.background} />
+            <Text style={styles.serviceRequestButtonText}>Raise Service Request</Text>
+          </TouchableOpacity>
+          <FlatList
+            data={brands}
+            renderItem={renderBrand}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        </>
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="business-outline" size={64} color={COLORS.textLight} />
@@ -87,6 +97,14 @@ const BrandsScreen = () => {
           <Text style={styles.emptySubtext}>
             Brands will be added soon
           </Text>
+          <TouchableOpacity
+            style={[styles.serviceRequestButton, styles.serviceRequestButtonEmpty]}
+            onPress={() => navigation.navigate('ServiceRequest', { service, category })}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="construct-outline" size={24} color={COLORS.background} />
+            <Text style={styles.serviceRequestButtonText}>Raise Service Request</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -164,6 +182,30 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginTop: 8,
     textAlign: 'center',
+  },
+  serviceRequestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    margin: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    gap: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  serviceRequestButtonEmpty: {
+    marginTop: 32,
+  },
+  serviceRequestButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

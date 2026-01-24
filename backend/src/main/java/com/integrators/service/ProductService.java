@@ -20,8 +20,6 @@ import com.integrators.repository.ProductCategoryRepository;
 import com.integrators.repository.ProductRepository;
 import com.integrators.repository.ServiceRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 public class ProductService {
 	private final ServiceRepository serviceRepository;
@@ -80,23 +78,23 @@ public class ProductService {
 	}
 
 	// Conversion methods
-	private ServiceDTO convertToServiceDTO(com.integrators.entity.Service service) {
+	public ServiceDTO convertToServiceDTO(com.integrators.entity.Service service) {
 		return new ServiceDTO(service.getId(), service.getName(), service.getIcon(), service.getDescription());
 	}
 
-	private ProductCategoryDTO convertToCategoryDTO(ProductCategory category) {
+	public ProductCategoryDTO convertToCategoryDTO(ProductCategory category) {
 		return new ProductCategoryDTO(category.getId(), category.getName(), category.getService().getId());
 	}
 
-	private BrandDTO convertToBrandDTO(Brand brand) {
+	public BrandDTO convertToBrandDTO(Brand brand) {
 		return new BrandDTO(brand.getId(), brand.getName(), brand.getCategory().getId());
 	}
 
-	private ModelDTO convertToModelDTO(Model model) {
+	public ModelDTO convertToModelDTO(Model model) {
 		return new ModelDTO(model.getId(), model.getName(), model.getImage(), model.getBrand().getId());
 	}
 
-	private ProductResponseDTO convertToProductResponseDTO(Product product) {
+	public ProductResponseDTO convertToProductResponseDTO(Product product) {
 		ProductResponseDTO dto = new ProductResponseDTO();
 		dto.setId(product.getId());
 		dto.setName(product.getName());

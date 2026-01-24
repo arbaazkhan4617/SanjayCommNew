@@ -5,21 +5,62 @@ import { useNavigation } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 import { COLORS } from '../utils/constants';
 
-const Header = ({ title, showSearch = true, showCart = true }) => {
+const Header = ({ title, showSearch = true, showCart = true, showHome = true }) => {
   const navigation = useNavigation();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
 
+  const handleHomePress = () => {
+    // Navigate to Home tab
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('HomeTab');
+    } else {
+      navigation.navigate('Home');
+    }
+  };
+
+  const handleCartPress = () => {
+    // Navigate to Cart tab
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('CartTab');
+    } else {
+      navigation.navigate('Cart');
+    }
+  };
+
+  const handleProductsPress = () => {
+    // Navigate to Products tab
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.navigate('ProductsTab');
+    } else {
+      navigation.navigate('Products');
+    }
+  };
+
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-      </TouchableOpacity>
+      <View style={styles.leftButtons}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        
+        {showHome && (
+          <TouchableOpacity
+            onPress={handleHomePress}
+            style={styles.iconButton}
+          >
+            <Ionicons name="home" size={24} color={COLORS.text} />
+          </TouchableOpacity>
+        )}
+      </View>
       
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} numberOfLines={1}>{title}</Text>
       
       <View style={styles.rightButtons}>
         {showSearch && (
@@ -33,7 +74,7 @@ const Header = ({ title, showSearch = true, showCart = true }) => {
         
         {showCart && (
           <TouchableOpacity
-            onPress={() => navigation.navigate('Cart')}
+            onPress={handleCartPress}
             style={styles.iconButton}
           >
             <Ionicons name="cart" size={24} color={COLORS.text} />
@@ -65,6 +106,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  leftButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   backButton: {
     padding: 8,
   },
@@ -74,6 +119,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
     marginLeft: 8,
+    marginRight: 8,
   },
   rightButtons: {
     flexDirection: 'row',

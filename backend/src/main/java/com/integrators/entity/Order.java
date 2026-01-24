@@ -19,15 +19,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Entity
 @Table(name = "orders")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Order {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -138,6 +131,22 @@ public class Order {
 	}
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	// Constructors
+	public Order() {
+	}
+
+	public Order(Long id, User user, List<OrderItem> orderItems, BigDecimal total, OrderStatus status, String shippingAddress, String paymentMethod, LocalDateTime createdAt, LocalDateTime updatedAt) {
+		this.id = id;
+		this.user = user;
+		this.orderItems = orderItems;
+		this.total = total;
+		this.status = status;
+		this.shippingAddress = shippingAddress;
+		this.paymentMethod = paymentMethod;
+		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
 

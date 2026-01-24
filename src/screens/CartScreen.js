@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,104 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../utils/constants';
+import { serviceRequestAPI } from '../services/api';
+import Toast from 'react-native-toast-message';
 
 const CartScreen = () => {
   const navigation = useNavigation();
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const total = getCartTotal();
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // For Request Callback
+  const [callbackPhone, setCallbackPhone] = useState(user?.phone || '');
+  const [callbackPreferredTime, setCallbackPreferredTime] = useState('');
+
+  const handleGetQuotation = () => {
+    const productNames = cartItems.map(item => item.name).join(', ');
+    const totalValue = total;
+    
+    navigation.navigate('ServiceRequest', {
+      subject: 'Request for Quotation',
+      description: `I would like to get a quotation for the following items:\n\n${productNames}\n\nTotal Estimated Value: ₹${totalValue.toLocaleString()}\n\nPlease provide a detailed quotation with pricing.`,
+      requestType: 'quotation',
+    });
+  };
+
+  const handleRequestService = () => {
+    const productNames = cartItems.map(item => item.name).join(', ');
+    
+    navigation.navigate('ServiceRequest', {
+      subject: 'Service Request',
+      description: `I need service support for the following products:\n\n${productNames}\n\nPlease provide service details and schedule.`,
+      requestType: 'service',
+    });
+  };
+
+  const handleRequestCallback = async () => {
+    if (!callbackPhone || callbackPhone.trim() === '') {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter your phone number',
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please login to request callback',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const productNames = cartItems.map(item => item.name).join(', ');
+      const totalValue = total;
+      const description = `Callback Request for Cart Items:\n\nProducts: ${productNames}\n\nTotal Value: ₹${totalValue.toLocaleString()}\n\nPreferred Time: ${callbackPreferredTime || 'Any time'}\n\nPlease call me at ${callbackPhone} to discuss these products.`;
+
+      await serviceRequestAPI.createServiceRequest({
+        userId: user.id,
+        subject: 'Request for Callback',
+        description: description,
+        contactPhone: callbackPhone,
+        contactEmail: user.email,
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Request Submitted!',
+        text2: 'We will call you back soon',
+      });
+
+      setShowActionModal(false);
+      setCallbackPhone(user?.phone || '');
+      setCallbackPreferredTime('');
+    } catch (error) {
+      console.error('Error submitting callback request:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.error || error.message || 'Failed to submit request',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -59,7 +147,16 @@ const CartScreen = () => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {cartItems.map((item) => (
           <View key={item.id} style={styles.cartItem}>
-            <Image source={{ uri: item.image }} style={styles.itemImage} />
+            <Image 
+              source={{ 
+                uri: item.image || item.product?.image || item.product?.model?.image || item.model?.image || 'https://via.placeholder.com/300x300?text=Product' 
+              }} 
+              style={styles.itemImage}
+              resizeMode="cover"
+              onError={(error) => {
+                console.log('Image load error for item:', item.id, error.nativeEvent.error);
+              }}
+            />
             <View style={styles.itemDetails}>
               <Text style={styles.itemName} numberOfLines={2}>
                 {item.name}
@@ -111,13 +208,97 @@ const CartScreen = () => {
           <Text style={styles.totalValue}>₹{total.toLocaleString()}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.checkoutButton}
-          onPress={() => navigation.navigate('Checkout')}
-        >
-          <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.quotationButton]}
+            onPress={() => handleGetQuotation()}
+          >
+            <Ionicons name="document-text" size={20} color={COLORS.background} />
+            <Text style={styles.actionButtonText}>Get Quotation</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.serviceButton]}
+            onPress={() => handleRequestService()}
+          >
+            <Ionicons name="construct" size={20} color={COLORS.background} />
+            <Text style={styles.actionButtonText}>Request Service</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.callbackButton]}
+            onPress={() => setShowActionModal(true)}
+          >
+            <Ionicons name="call" size={20} color={COLORS.background} />
+            <Text style={styles.actionButtonText}>Request Callback</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Request Callback Modal */}
+      <Modal
+        visible={showActionModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowActionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Request Callback</Text>
+              <TouchableOpacity onPress={() => setShowActionModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.modalLabel}>Phone Number *</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={callbackPhone}
+                onChangeText={setCallbackPhone}
+                placeholder="Enter your phone number"
+                keyboardType="phone-pad"
+                placeholderTextColor={COLORS.textLight}
+              />
+
+              <Text style={styles.modalLabel}>Preferred Time</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={callbackPreferredTime}
+                onChangeText={setCallbackPreferredTime}
+                placeholder="e.g., Morning 9-12, Evening 6-9"
+                placeholderTextColor={COLORS.textLight}
+              />
+
+              <Text style={styles.modalInfo}>
+                We will call you back to discuss your requirements for the selected items.
+              </Text>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setShowActionModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalSubmitButton]}
+                onPress={handleRequestCallback}
+                disabled={loading || !callbackPhone}
+              >
+                {loading ? (
+                  <Text style={styles.modalSubmitText}>Submitting...</Text>
+                ) : (
+                  <Text style={styles.modalSubmitText}>Submit Request</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -277,14 +458,107 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.primary,
   },
-  checkoutButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 8,
+  actionButtonsContainer: {
     marginTop: 16,
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  quotationButton: {
+    backgroundColor: COLORS.primary,
+  },
+  serviceButton: {
+    backgroundColor: '#4CAF50',
+  },
+  callbackButton: {
+    backgroundColor: '#2196F3',
+  },
+  actionButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: COLORS.text,
+    backgroundColor: COLORS.background,
+  },
+  modalInfo: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginTop: 16,
+    lineHeight: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  checkoutButtonText: {
+  modalCancelButton: {
+    backgroundColor: COLORS.border,
+  },
+  modalCancelText: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalSubmitButton: {
+    backgroundColor: COLORS.primary,
+  },
+  modalSubmitText: {
     color: COLORS.background,
     fontSize: 16,
     fontWeight: 'bold',

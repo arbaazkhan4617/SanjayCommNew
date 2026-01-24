@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../utils/constants';
 import { validateEmail, formatValidationError } from '../utils/validation';
+import { salesAPI, adminAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
 const LoginScreen = () => {
@@ -44,6 +46,108 @@ const LoginScreen = () => {
       return;
     }
 
+    // Check if it's an admin email - automatically redirect to admin dashboard
+    if (email.toLowerCase().trim() === 'admin@integrators.com') {
+      try {
+        setLoading(true);
+        const response = await adminAPI.login(email, password);
+        
+        if (response.data.success) {
+          const adminUser = {
+            id: response.data.user.id,
+            name: response.data.user.name,
+            email: response.data.user.email,
+            role: response.data.user.role,
+          };
+          
+          await AsyncStorage.setItem('adminUser', JSON.stringify(adminUser));
+          
+          Toast.show({
+            type: 'success',
+            text1: 'Login Successful',
+            text2: 'Welcome to Admin Dashboard',
+          });
+          
+          setTimeout(() => {
+            const rootNavigation = navigation.getParent() || navigation;
+            rootNavigation.reset({
+              index: 0,
+              routes: [{ name: 'AdminStack' }],
+            });
+          }, 200);
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Login Failed',
+            text2: response.data.error || 'Invalid credentials',
+          });
+        }
+      } catch (error) {
+        console.error('Admin login error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: error.response?.data?.error || error.message || 'Unable to login',
+        });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Check if it's a sales email - automatically redirect to sales dashboard
+    if (email.toLowerCase().trim() === 'sales@sanjaycomm.com') {
+      try {
+        setLoading(true);
+        const response = await salesAPI.login(email, password);
+        
+        if (response.data.success) {
+          const salesUser = {
+            id: response.data.user.id,
+            name: response.data.user.name,
+            email: response.data.user.email,
+            role: response.data.user.role,
+          };
+          
+          await AsyncStorage.setItem('salesUser', JSON.stringify(salesUser));
+          
+          Toast.show({
+            type: 'success',
+            text1: 'Login Successful',
+            text2: 'Welcome to Sales Dashboard',
+          });
+          
+          // Force App.js to re-check by triggering a small delay
+          // The App.js will detect salesUser and show SalesStack
+          setTimeout(() => {
+            // Try to get parent navigator (root navigator)
+            const rootNavigation = navigation.getParent() || navigation;
+            rootNavigation.reset({
+              index: 0,
+              routes: [{ name: 'SalesStack' }],
+            });
+          }, 200);
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Login Failed',
+            text2: response.data.error || 'Invalid credentials',
+          });
+        }
+      } catch (error) {
+        console.error('Sales login error:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: error.response?.data?.error || error.message || 'Unable to login',
+        });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Regular user login
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
