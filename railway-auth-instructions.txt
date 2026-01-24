@@ -1,0 +1,34 @@
+RAILWAY AUTHENTICATION INSTRUCTIONS
+====================================
+
+To proceed with Railway deployment from terminal, you need to authenticate first.
+
+Option 1: Interactive Login (Recommended)
+------------------------------------------
+Run this command in your terminal:
+  railway login
+
+This will:
+1. Open your browser
+2. Ask you to authorize Railway CLI
+3. Complete authentication automatically
+
+After authentication, run:
+  ./railway-deploy.sh
+
+Option 2: Use API Token
+-----------------------
+1. Go to: https://railway.app/account/tokens
+2. Create a new token
+3. Set it as environment variable:
+   export RAILWAY_TOKEN=your_token_here
+4. Then run: ./railway-deploy.sh
+
+Once authenticated, the script will:
+- Link to your Railway project
+- Configure the backend service
+- Add MySQL database
+- Set environment variables
+- Expose the service
+- Deploy the application
+
