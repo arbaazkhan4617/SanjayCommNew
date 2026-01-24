@@ -10,6 +10,13 @@ import java.util.Map;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
+    // Expected counts for seeded data
+    private static final long EXPECTED_SERVICES = 1;
+    private static final long EXPECTED_CATEGORIES = 9;
+    private static final long EXPECTED_BRANDS = 111;
+    private static final long EXPECTED_MODELS = 130;
+    private static final long EXPECTED_PRODUCTS = 130;
+    
     private final ServiceRepository serviceRepository;
     private final ProductCategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
@@ -37,27 +44,53 @@ public class DataSeeder implements CommandLineRunner {
         // Always seed users (check separately)
         seedDefaultUsers();
         
-        // Seed products only if products don't exist (check products, not services)
-        long productCount = productRepository.count();
+        // Check current counts
         long serviceCount = serviceRepository.count();
         long categoryCount = categoryRepository.count();
+        long brandCount = brandRepository.count();
+        long modelCount = modelRepository.count();
+        long productCount = productRepository.count();
         
         System.out.println("Current database counts:");
-        System.out.println("  Services: " + serviceCount);
-        System.out.println("  Categories: " + categoryCount);
-        System.out.println("  Products: " + productCount);
+        System.out.println("  Services: " + serviceCount + " (expected: " + EXPECTED_SERVICES + ")");
+        System.out.println("  Categories: " + categoryCount + " (expected: " + EXPECTED_CATEGORIES + ")");
+        System.out.println("  Brands: " + brandCount + " (expected: " + EXPECTED_BRANDS + ")");
+        System.out.println("  Models: " + modelCount + " (expected: " + EXPECTED_MODELS + ")");
+        System.out.println("  Products: " + productCount + " (expected: " + EXPECTED_PRODUCTS + ")");
         
-        if (productCount > 0) {
-            System.out.println("Products already seeded. Skipping product seeding...");
+        // Check if all counts match expected values
+        boolean allCountsMatch = (serviceCount == EXPECTED_SERVICES) &&
+                                 (categoryCount == EXPECTED_CATEGORIES) &&
+                                 (brandCount == EXPECTED_BRANDS) &&
+                                 (modelCount == EXPECTED_MODELS) &&
+                                 (productCount == EXPECTED_PRODUCTS);
+        
+        if (allCountsMatch) {
+            System.out.println("All counts match expected values. Database is fully seeded. Skipping product seeding...");
             System.out.println("========================================");
             return;
         }
-
-        System.out.println("Database is empty or missing products. Seeding database with product data...");
+        
+        // If counts don't match, seed (idempotent methods will skip existing items)
+        System.out.println("Counts don't match expected values. Seeding missing data...");
         System.out.println("This may take a few moments...");
         seedData();
+        
+        // Verify final counts
+        long finalServiceCount = serviceRepository.count();
+        long finalCategoryCount = categoryRepository.count();
+        long finalBrandCount = brandRepository.count();
+        long finalModelCount = modelRepository.count();
+        long finalProductCount = productRepository.count();
+        
+        System.out.println("Final database counts after seeding:");
+        System.out.println("  Services: " + finalServiceCount + " (expected: " + EXPECTED_SERVICES + ")");
+        System.out.println("  Categories: " + finalCategoryCount + " (expected: " + EXPECTED_CATEGORIES + ")");
+        System.out.println("  Brands: " + finalBrandCount + " (expected: " + EXPECTED_BRANDS + ")");
+        System.out.println("  Models: " + finalModelCount + " (expected: " + EXPECTED_MODELS + ")");
+        System.out.println("  Products: " + finalProductCount + " (expected: " + EXPECTED_PRODUCTS + ")");
         System.out.println("========================================");
-        System.out.println("Database seeding completed successfully!");
+        System.out.println("Database seeding completed!");
         System.out.println("========================================");
     }
 
@@ -106,7 +139,7 @@ public class DataSeeder implements CommandLineRunner {
         // Create default sales user if not exists
         if (!userRepository.existsByEmail("sales@sanjaycomm.com")) {
             User salesUser = new User();
-            
+
             salesUser.setName("Sales Team");
             salesUser.setEmail("sales@sanjaycomm.com");
             salesUser.setPassword(passwordEncoder.encode("sales123"));
@@ -179,30 +212,67 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private ProductCategory createCategory(String name, Service service) {
+        // Check if category already exists for this service
+        java.util.List<ProductCategory> existingCategories = categoryRepository.findByServiceId(service.getId());
+        for (ProductCategory cat : existingCategories) {
+            if (name.equals(cat.getName())) {
+                return cat; // Reuse existing category
+            }
+        }
+        
+        // Create new category if it doesn't exist
         ProductCategory category = new ProductCategory();
         category.setName(name);
         category.setService(service);
-        return categoryRepository.save(category);
+        category = categoryRepository.save(category);
+        return category;
     }
 
     private Brand createBrand(String name, ProductCategory category) {
+        // Check if brand already exists for this category
+        java.util.List<Brand> existingBrands = brandRepository.findByCategoryId(category.getId());
+        for (Brand b : existingBrands) {
+            if (name.equals(b.getName())) {
+                return b; // Reuse existing brand
+            }
+        }
+        
+        // Create new brand if it doesn't exist
         Brand brand = new Brand();
         brand.setName(name);
         brand.setCategory(category);
-        return brandRepository.save(brand);
+        brand = brandRepository.save(brand);
+        return brand;
     }
 
     private Model createModel(String name, String image, Brand brand) {
+        // Check if model already exists for this brand
+        java.util.List<Model> existingModels = modelRepository.findByBrandId(brand.getId());
+        for (Model m : existingModels) {
+            if (name.equals(m.getName())) {
+                return m; // Reuse existing model
+            }
+        }
+        
+        // Create new model if it doesn't exist
         Model model = new Model();
         model.setName(name);
         model.setImage(image);
         model.setBrand(brand);
-        return modelRepository.save(model);
+        model = modelRepository.save(model);
+        return model;
     }
 
     private Product createProduct(Model model, String name, String description, 
                                   BigDecimal price, BigDecimal originalPrice, Boolean inStock,
                                   Double rating, Integer reviews, Map<String, String> specifications) {
+        // Check if product already exists for this model
+        java.util.Optional<Product> existingProduct = productRepository.findByModelId(model.getId());
+        if (existingProduct.isPresent()) {
+            return existingProduct.get(); // Reuse existing product
+        }
+        
+        // Create new product if it doesn't exist
         Product product = new Product();
         product.setName(name);
         product.setDescription(description);
@@ -213,7 +283,8 @@ public class DataSeeder implements CommandLineRunner {
         product.setReviews(reviews);
         product.setModel(model);
         product.setSpecifications(specifications);
-        return productRepository.save(product);
+        product = productRepository.save(product);
+        return product;
     }
 
     private void seedCCTVProducts(Service cctvService, ProductCategory ipCameras, ProductCategory ptzCameras,
