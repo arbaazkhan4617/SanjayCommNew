@@ -99,12 +99,24 @@ const HomeScreen = () => {
             <Text style={styles.bannerSubtitle}>
               For Homes, Offices, and Industries
             </Text>
-            <TouchableOpacity
-              style={styles.bannerButton}
-              onPress={() => navigation.navigate('Products')}
-            >
-              <Text style={styles.bannerButtonText}>Shop Now</Text>
-            </TouchableOpacity>
+            <View style={styles.bannerButtonsContainer}>
+              <TouchableOpacity
+                style={styles.bannerButton}
+                onPress={() => navigation.navigate('Products')}
+              >
+                <Text style={styles.bannerButtonText}>Shop Now</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.bannerButtonSecondary}
+                onPress={() => navigation.navigate('ServiceRequest', {
+                  subject: 'Service Request',
+                  description: 'I would like to raise a service request. Please contact me for further details.',
+                  requestType: 'service',
+                })}
+              >
+                <Text style={styles.bannerButtonSecondaryText}>Raise Service Request</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Categories */}
@@ -264,16 +276,40 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
+  bannerButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
   bannerButton: {
     backgroundColor: COLORS.background,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
+    minWidth: 120,
   },
   bannerButtonText: {
     color: COLORS.primary,
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  bannerButtonSecondary: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: COLORS.background,
+    minWidth: 120,
+  },
+  bannerButtonSecondaryText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   section: {
     marginVertical: 16,
