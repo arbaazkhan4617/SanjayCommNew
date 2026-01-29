@@ -7,16 +7,78 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../utils/constants';
+import Toast from 'react-native-toast-message';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      // Call the logout function from AuthContext
+      await logout();
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out',
+        text2: 'Redirecting to login...',
+      });
+      
+      // Get the root navigator
+      let rootNavigator = navigation;
+      while (rootNavigator.getParent && rootNavigator.getParent()) {
+        rootNavigator = rootNavigator.getParent();
+      }
+      
+      // Force a state check by triggering a navigation action
+      rootNavigator.dispatch((state) => {
+        return CommonActions.navigate({
+          name: state.routes[state.index].name,
+          params: state.routes[state.index].params,
+        });
+      });
+      
+      // Wait for React to re-render with updated navigation structure
+      // Then navigate to Login
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          try {
+            rootNavigator.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              })
+            );
+          } catch (navError) {
+            console.log('Navigation error, retrying...', navError);
+            // Retry after another frame
+            setTimeout(() => {
+              try {
+                rootNavigator.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  })
+                );
+              } catch (e) {
+                console.log('Navigation will update automatically');
+              }
+            }, 200);
+          }
+        });
+      }, 100);
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Error',
+        text2: 'Failed to logout. Please try again.',
+      });
+    }
   };
 
   const menuItems = [

@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, Long> {
     List<ServiceRequest> findByUserId(Long userId);
-    List<ServiceRequest> findByServiceId(Long serviceId);
     List<ServiceRequest> findByCategoryId(Long categoryId);
+    List<ServiceRequest> findBySubCategoryId(Long subCategoryId);
     List<ServiceRequest> findByStatus(String status);
 }

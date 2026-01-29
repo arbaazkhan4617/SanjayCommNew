@@ -316,6 +316,7 @@ public class SalesController {
         ServiceRequestDTO dto = new ServiceRequestDTO();
         dto.setId(request.getId());
         dto.setUserId(request.getUser().getId());
+        dto.setUserName(request.getUser().getName());
         dto.setSubject(request.getSubject());
         dto.setDescription(request.getDescription());
         dto.setStatus(request.getStatus());
@@ -325,6 +326,17 @@ public class SalesController {
         dto.setAddress(request.getAddress());
         dto.setCreatedAt(request.getCreatedAt());
         dto.setUpdatedAt(request.getUpdatedAt());
+        
+        if (request.getCategory() != null) {
+            dto.setCategoryId(request.getCategory().getId());
+            dto.setCategoryName(request.getCategory().getName());
+        }
+        
+        if (request.getSubCategory() != null) {
+            dto.setSubCategoryId(request.getSubCategory().getId());
+            dto.setSubCategoryName(request.getSubCategory().getName());
+        }
+        
         return dto;
     }
 }

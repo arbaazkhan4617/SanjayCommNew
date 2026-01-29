@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
@@ -18,7 +19,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
-  const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,18 +30,18 @@ const HomeScreen = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [servicesResponse, productsResponse] = await Promise.all([
-        productAPI.getServices(),
+      const [categoriesResponse, productsResponse] = await Promise.all([
+        productAPI.getCategories(),
         productAPI.getAllProducts(),
       ]);
-      setServices(servicesResponse.data);
+      setCategories(categoriesResponse.data);
       setFeaturedProducts(productsResponse.data.slice(0, 4));
     } catch (error) {
       console.error('Error loading data:', error);
       console.error('Error details:', error.message);
       console.error('API URL:', error.config?.url);
       // Fallback to empty arrays on error - app will still work
-      setServices([]);
+      setCategories([]);
       setFeaturedProducts([]);
       // Don't show error to user on initial load - app can work offline
     } finally {
@@ -49,7 +50,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Top Header */}
       <View style={styles.topHeader}>
         <View style={styles.logoContainer}>
@@ -119,22 +120,22 @@ const HomeScreen = () => {
               showsHorizontalScrollIndicator={false}
               style={styles.categoriesScroll}
             >
-              {services.map((service) => (
+              {categories.map((category) => (
                 <TouchableOpacity
-                  key={service.id}
+                  key={category.id}
                   style={styles.categoryCard}
                   onPress={() =>
-                    navigation.navigate('ProductCategories', { service })
+                    navigation.navigate('SubCategories', { category })
                   }
                 >
                   <View style={styles.categoryIcon}>
                     <Ionicons 
-                      name={service.icon || 'grid-outline'} 
+                      name={category.icon || 'grid-outline'} 
                       size={32} 
                       color={COLORS.primary} 
                     />
                   </View>
-                  <Text style={styles.categoryName}>{service.name}</Text>
+                  <Text style={styles.categoryName}>{category.name}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -171,7 +172,7 @@ const HomeScreen = () => {
           </View>
         </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

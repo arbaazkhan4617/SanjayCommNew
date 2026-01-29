@@ -15,30 +15,30 @@ import { productAPI } from '../services/api';
 
 const CategoriesScreen = () => {
   const navigation = useNavigation();
-  const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadServices();
+    loadCategories();
   }, []);
 
-  const loadServices = async () => {
+  const loadCategories = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getServices();
-      setServices(response.data);
+      const response = await productAPI.getCategories();
+      setCategories(response.data);
     } catch (error) {
-      console.error('Error loading services:', error);
-      setServices([]);
+      console.error('Error loading categories:', error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderService = ({ item }) => (
+  const renderCategory = ({ item }) => (
     <TouchableOpacity
       style={styles.serviceCard}
-      onPress={() => navigation.navigate('ProductCategories', { service: item })}
+      onPress={() => navigation.navigate('SubCategories', { category: item })}
       activeOpacity={0.7}
     >
       <View style={styles.serviceIcon}>
@@ -63,14 +63,21 @@ const CategoriesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Browse by Service" />
-      <FlatList
-        data={services}
-        renderItem={renderService}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={true}
-      />
+      <Header title="Browse by Category" />
+      {categories.length > 0 ? (
+        <FlatList
+          data={categories}
+          renderItem={renderCategory}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={true}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="grid-outline" size={64} color={COLORS.textLight} />
+          <Text style={styles.emptyText}>No categories found</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -91,6 +98,18 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginTop: 16,
   },
   serviceCard: {
     flexDirection: 'row',

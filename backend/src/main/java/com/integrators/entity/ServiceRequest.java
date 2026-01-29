@@ -16,12 +16,12 @@ public class ServiceRequest {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id")
-    private Service service;
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private ProductCategory category;
+    @JoinColumn(name = "sub_category_id")
+    private SubCategory subCategory;
 
     @Column(nullable = false, length = 200)
     private String subject;
@@ -81,20 +81,20 @@ public class ServiceRequest {
         this.user = user;
     }
 
-    public Service getService() {
-        return service;
-    }
-
-    public void setService(Service service) {
-        this.service = service;
-    }
-
-    public ProductCategory getCategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(ProductCategory category) {
+    public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public SubCategory getSubCategory() {
+        return subCategory;
+    }
+
+    public void setSubCategory(SubCategory subCategory) {
+        this.subCategory = subCategory;
     }
 
     public String getSubject() {
@@ -173,11 +173,11 @@ public class ServiceRequest {
     public ServiceRequest() {
     }
 
-    public ServiceRequest(Long id, User user, Service service, ProductCategory category, String subject, String description, String contactName, String contactPhone, String contactEmail, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ServiceRequest(Long id, User user, Category category, SubCategory subCategory, String subject, String description, String contactName, String contactPhone, String contactEmail, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.user = user;
-        this.service = service;
         this.category = category;
+        this.subCategory = subCategory;
         this.subject = subject;
         this.description = description;
         this.contactName = contactName;

@@ -2,6 +2,8 @@ package com.integrators.config;
 
 import com.integrators.entity.*;
 import com.integrators.repository.*;
+import com.integrators.entity.Category;
+import com.integrators.entity.SubCategory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +14,14 @@ import java.util.Random;
 @Component
 public class DataSeeder implements CommandLineRunner {
     // Expected counts for seeded data
-    private static final long EXPECTED_SERVICES = 11; // CCTV, Computers, Networking, Access Controls, Fire Alarms, Video Door Phones, Solar Power, Audio Video, Power Supply, Accessories, EPABX & Intercom
-    private static final long EXPECTED_CATEGORIES = 11; // Main categories (sub-categories are additional)
+    private static final long EXPECTED_CATEGORIES = 11; // CCTV, Computers, Networking, Access Controls, Fire Alarms, Video Door Phones, Solar Power, Audio Video, Power Supply, Accessories, EPABX & Intercom
+    private static final long EXPECTED_SUB_CATEGORIES = 50; // Sub-categories under categories
      private static final long EXPECTED_BRANDS = 111;
     private static final long EXPECTED_MODELS = 130;
     private static final long EXPECTED_PRODUCTS = 130;
     
-    private final ServiceRepository serviceRepository;
-    private final ProductCategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
     private final BrandRepository brandRepository;
     private final ModelRepository modelRepository;
     private final ProductRepository productRepository;
@@ -39,9 +41,9 @@ public class DataSeeder implements CommandLineRunner {
         return CAMERA_IMAGES[random.nextInt(CAMERA_IMAGES.length)];
     }
 
-    public DataSeeder(ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository, BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
-        this.serviceRepository = serviceRepository;
+    public DataSeeder(CategoryRepository categoryRepository, SubCategoryRepository subCategoryRepository, BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository, UserRepository userRepository, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.categoryRepository = categoryRepository;
+        this.subCategoryRepository = subCategoryRepository;
         this.brandRepository = brandRepository;
         this.modelRepository = modelRepository;
         this.productRepository = productRepository;
@@ -59,22 +61,22 @@ public class DataSeeder implements CommandLineRunner {
         seedDefaultUsers();
         
         // Check current counts
-        long serviceCount = serviceRepository.count();
         long categoryCount = categoryRepository.count();
+        long subCategoryCount = subCategoryRepository.count();
         long brandCount = brandRepository.count();
         long modelCount = modelRepository.count();
         long productCount = productRepository.count();
         
         System.out.println("Current database counts:");
-        System.out.println("  Services: " + serviceCount + " (expected: " + EXPECTED_SERVICES + ")");
         System.out.println("  Categories: " + categoryCount + " (expected: " + EXPECTED_CATEGORIES + ")");
+        System.out.println("  Sub Categories: " + subCategoryCount + " (expected: " + EXPECTED_SUB_CATEGORIES + ")");
         System.out.println("  Brands: " + brandCount + " (expected: " + EXPECTED_BRANDS + ")");
         System.out.println("  Models: " + modelCount + " (expected: " + EXPECTED_MODELS + ")");
         System.out.println("  Products: " + productCount + " (expected: " + EXPECTED_PRODUCTS + ")");
         
         // Check if all counts match expected values
-        boolean allCountsMatch = (serviceCount == EXPECTED_SERVICES) &&
-                                 (categoryCount == EXPECTED_CATEGORIES) &&
+        boolean allCountsMatch = (categoryCount == EXPECTED_CATEGORIES) &&
+                                 (subCategoryCount == EXPECTED_SUB_CATEGORIES) &&
                                  (brandCount == EXPECTED_BRANDS) &&
                                  (modelCount == EXPECTED_MODELS) &&
                                  (productCount == EXPECTED_PRODUCTS);
@@ -88,8 +90,8 @@ public class DataSeeder implements CommandLineRunner {
         // If counts don't match, seed (idempotent methods will skip existing items)
         System.out.println("Counts don't match expected values. Seeding missing data...");
         System.out.println("Missing items:");
-        if (serviceCount < EXPECTED_SERVICES) System.out.println("  - Services: " + (EXPECTED_SERVICES - serviceCount) + " missing");
         if (categoryCount < EXPECTED_CATEGORIES) System.out.println("  - Categories: " + (EXPECTED_CATEGORIES - categoryCount) + " missing");
+        if (subCategoryCount < EXPECTED_SUB_CATEGORIES) System.out.println("  - Sub Categories: " + (EXPECTED_SUB_CATEGORIES - subCategoryCount) + " missing");
         if (brandCount < EXPECTED_BRANDS) System.out.println("  - Brands: " + (EXPECTED_BRANDS - brandCount) + " missing");
         if (modelCount < EXPECTED_MODELS) System.out.println("  - Models: " + (EXPECTED_MODELS - modelCount) + " missing");
         if (productCount < EXPECTED_PRODUCTS) System.out.println("  - Products: " + (EXPECTED_PRODUCTS - productCount) + " missing");
@@ -104,15 +106,15 @@ public class DataSeeder implements CommandLineRunner {
         }
         
         // Verify final counts
-        long finalServiceCount = serviceRepository.count();
         long finalCategoryCount = categoryRepository.count();
+        long finalSubCategoryCount = subCategoryRepository.count();
         long finalBrandCount = brandRepository.count();
         long finalModelCount = modelRepository.count();
         long finalProductCount = productRepository.count();
         
         System.out.println("Final database counts after seeding:");
-        System.out.println("  Services: " + finalServiceCount + " (expected: " + EXPECTED_SERVICES + ")");
         System.out.println("  Categories: " + finalCategoryCount + " (expected: " + EXPECTED_CATEGORIES + ")");
+        System.out.println("  Sub Categories: " + finalSubCategoryCount + " (expected: " + EXPECTED_SUB_CATEGORIES + ")");
         System.out.println("  Brands: " + finalBrandCount + " (expected: " + EXPECTED_BRANDS + ")");
         System.out.println("  Models: " + finalModelCount + " (expected: " + EXPECTED_MODELS + ")");
         System.out.println("  Products: " + finalProductCount + " (expected: " + EXPECTED_PRODUCTS + ")");
@@ -186,81 +188,81 @@ public class DataSeeder implements CommandLineRunner {
     private void seedData() {
         System.out.println("Creating all 11 services...");
         
-        // 1. CCTV Service
-        Service cctvService = createService("CCTV", "videocam", "Complete CCTV surveillance solutions including IP and analog systems");
-        ProductCategory ipCameras = createCategory("IP Cameras", cctvService);
-        ProductCategory ptzCameras = createCategory("PTZ Cameras", cctvService);
-        ProductCategory wifiCameras = createCategory("WiFi Cameras", cctvService);
-        ProductCategory bulletCameras = createCategory("Bullet Cameras", cctvService);
-        ProductCategory domeCameras = createCategory("Dome Cameras", cctvService);
-        ProductCategory dvrSystems = createCategory("DVR Systems", cctvService);
-        ProductCategory cctvAccessoriesForCCTV = createCategory("CCTV Accessories", cctvService);
-        ProductCategory ipHdSystems = createCategory("IP HD Systems", cctvService);
-        ProductCategory analogHdSystems = createCategory("Analog HD Systems", cctvService);
+        // 1. CCTV Category
+        Category cctvCategory = createCategory("CCTV", "videocam", "Complete CCTV surveillance solutions including IP and analog systems");
+        SubCategory ipCameras = createSubCategory("IP Cameras", cctvCategory);
+        SubCategory ptzCameras = createSubCategory("PTZ Cameras", cctvCategory);
+        SubCategory wifiCameras = createSubCategory("WiFi Cameras", cctvCategory);
+        SubCategory bulletCameras = createSubCategory("Bullet Cameras", cctvCategory);
+        SubCategory domeCameras = createSubCategory("Dome Cameras", cctvCategory);
+        SubCategory dvrSystems = createSubCategory("DVR Systems", cctvCategory);
+        SubCategory cctvAccessoriesForCCTV = createSubCategory("CCTV Accessories", cctvCategory);
+        SubCategory ipHdSystems = createSubCategory("IP HD Systems", cctvCategory);
+        SubCategory analogHdSystems = createSubCategory("Analog HD Systems", cctvCategory);
         
-        // 2. Computers Service
-        Service computersService = createService("Computers", "desktop", "Desktop computers, laptops, and computer accessories");
-        ProductCategory desktopPC = createCategory("Desktop PC", computersService);
-        ProductCategory printers = createCategory("Printers", computersService);
-        ProductCategory monitors = createCategory("Monitors", computersService);
-        ProductCategory computerAccessories = createCategory("Computer Accessories", computersService);
+        // 2. Computers Category
+        Category computersCategory = createCategory("Computers", "desktop", "Desktop computers, laptops, and computer accessories");
+        SubCategory desktopPC = createSubCategory("Desktop PC", computersCategory);
+        SubCategory printers = createSubCategory("Printers", computersCategory);
+        SubCategory monitors = createSubCategory("Monitors", computersCategory);
+        SubCategory computerAccessories = createSubCategory("Computer Accessories", computersCategory);
         
-        // 3. Networking Service
-        Service networkingService = createService("Networking", "wifi", "Network equipment including switches, routers, and cables");
-        ProductCategory networkSwitches = createCategory("Network Switches", networkingService);
-        ProductCategory routers = createCategory("Routers", networkingService);
-        ProductCategory cables = createCategory("Cables", networkingService);
-        ProductCategory poeSwitches = createCategory("PoE Switches", networkingService);
+        // 3. Networking Category
+        Category networkingCategory = createCategory("Networking", "wifi", "Network equipment including switches, routers, and cables");
+        SubCategory networkSwitches = createSubCategory("Network Switches", networkingCategory);
+        SubCategory routers = createSubCategory("Routers", networkingCategory);
+        SubCategory cables = createSubCategory("Cables", networkingCategory);
+        SubCategory poeSwitches = createSubCategory("PoE Switches", networkingCategory);
         
-        // 4. Access Controls Service
-        Service accessControlService = createService("Access Controls", "shield-checkmark", "Access control systems including biometrics and electronic locks");
-        ProductCategory biometricDevices = createCategory("Biometrics", accessControlService);
-        ProductCategory doorLocks = createCategory("Door Locks", accessControlService);
-        ProductCategory faceMachines = createCategory("Face Recognition Machines", accessControlService);
-        ProductCategory electronicLocks = createCategory("Electronic Locks", accessControlService);
-        ProductCategory gpsDevices = createCategory("GPS Devices for Vehicles", accessControlService);
+        // 4. Access Controls Category
+        Category accessControlCategory = createCategory("Access Controls", "shield-checkmark", "Access control systems including biometrics and electronic locks");
+        SubCategory biometricDevices = createSubCategory("Biometrics", accessControlCategory);
+        SubCategory doorLocks = createSubCategory("Door Locks", accessControlCategory);
+        SubCategory faceMachines = createSubCategory("Face Recognition Machines", accessControlCategory);
+        SubCategory electronicLocks = createSubCategory("Electronic Locks", accessControlCategory);
+        SubCategory gpsDevices = createSubCategory("GPS Devices for Vehicles", accessControlCategory);
         
-        // 5. Fire Alarms Service
-        Service fireAlarmService = createService("Fire Alarms", "flame", "Fire alarm systems and safety equipment");
-        ProductCategory firePanels = createCategory("Fire Panels", fireAlarmService);
-        ProductCategory smokeDetectors = createCategory("Smoke Detectors", fireAlarmService);
-        ProductCategory conventionalFireAlarms = createCategory("Conventional Fire Alarm Systems", fireAlarmService);
-        ProductCategory addressableFireAlarms = createCategory("Analogue Addressable Fire Alarm Systems", fireAlarmService);
+        // 5. Fire Alarms Category
+        Category fireAlarmCategory = createCategory("Fire Alarms", "flame", "Fire alarm systems and safety equipment");
+        SubCategory firePanels = createSubCategory("Fire Panels", fireAlarmCategory);
+        SubCategory smokeDetectors = createSubCategory("Smoke Detectors", fireAlarmCategory);
+        SubCategory conventionalFireAlarms = createSubCategory("Conventional Fire Alarm Systems", fireAlarmCategory);
+        SubCategory addressableFireAlarms = createSubCategory("Analogue Addressable Fire Alarm Systems", fireAlarmCategory);
         
-        // 6. Video Door Phones Service
-        Service videoDoorPhoneService = createService("Video Door Phones", "call", "Video door phone systems for residential and commercial use");
-        ProductCategory videoDoorPhones = createCategory("Video Door Phones", videoDoorPhoneService);
-        ProductCategory analogueVDP = createCategory("Analogue Video Door Phones", videoDoorPhoneService);
-        ProductCategory ipVDP = createCategory("IP Video Door Phones", videoDoorPhoneService);
+        // 6. Video Door Phones Category
+        Category videoDoorPhoneCategory = createCategory("Video Door Phones", "call", "Video door phone systems for residential and commercial use");
+        SubCategory videoDoorPhones = createSubCategory("Video Door Phones", videoDoorPhoneCategory);
+        SubCategory analogueVDP = createSubCategory("Analogue Video Door Phones", videoDoorPhoneCategory);
+        SubCategory ipVDP = createSubCategory("IP Video Door Phones", videoDoorPhoneCategory);
         
-        // 7. Solar Power Service
-        Service solarService = createService("Solar Power", "sunny", "Solar power solutions and inverters");
-        ProductCategory solarInverters = createCategory("Solar Inverters", solarService);
-        ProductCategory solarBatteries = createCategory("Solar Batteries", solarService);
-        ProductCategory solarCables = createCategory("Solar Cables", solarService);
+        // 7. Solar Power Category
+        Category solarCategory = createCategory("Solar Power", "sunny", "Solar power solutions and inverters");
+        SubCategory solarInverters = createSubCategory("Solar Inverters", solarCategory);
+        SubCategory solarBatteries = createSubCategory("Solar Batteries", solarCategory);
+        SubCategory solarCables = createSubCategory("Solar Cables", solarCategory);
         
-        // 8. Audio Video Service
-        Service audioVideoService = createService("Audio Video", "musical-notes", "Audio and video equipment");
-        ProductCategory speakers = createCategory("Speakers", audioVideoService);
-        ProductCategory amplifiers = createCategory("Amplifiers", audioVideoService);
+        // 8. Audio Video Category
+        Category audioVideoCategory = createCategory("Audio Video", "musical-notes", "Audio and video equipment");
+        SubCategory speakers = createSubCategory("Speakers", audioVideoCategory);
+        SubCategory amplifiers = createSubCategory("Amplifiers", audioVideoCategory);
         
-        // 9. Power Supply Service
-        Service powerSupplyService = createService("Power Supply", "battery", "Power supply solutions including adapters, UPS, and power supplies");
-        ProductCategory adapters = createCategory("Adapters", powerSupplyService);
-        ProductCategory ups = createCategory("UPS", powerSupplyService);
-        ProductCategory powerSupplies = createCategory("Power Supplies", powerSupplyService);
+        // 9. Power Supply Category
+        Category powerSupplyCategory = createCategory("Power Supply", "battery", "Power supply solutions including adapters, UPS, and power supplies");
+        SubCategory adapters = createSubCategory("Adapters", powerSupplyCategory);
+        SubCategory ups = createSubCategory("UPS", powerSupplyCategory);
+        SubCategory powerSupplies = createSubCategory("Power Supplies", powerSupplyCategory);
         
-        // 10. Accessories Service
-        Service accessoriesService = createService("Accessories", "construct", "Various accessories for security and technology systems");
-        ProductCategory connectors = createCategory("Connectors", accessoriesService);
-        ProductCategory brackets = createCategory("Brackets", accessoriesService);
-        ProductCategory storage = createCategory("Storage", accessoriesService);
-        ProductCategory cctvAccessories = createCategory("CCTV Accessories", accessoriesService);
-        ProductCategory epabxAccessories = createCategory("EPABX Accessories", accessoriesService);
+        // 10. Accessories Category
+        Category accessoriesCategory = createCategory("Accessories", "construct", "Various accessories for security and technology systems");
+        SubCategory connectors = createSubCategory("Connectors", accessoriesCategory);
+        SubCategory brackets = createSubCategory("Brackets", accessoriesCategory);
+        SubCategory storage = createSubCategory("Storage", accessoriesCategory);
+        SubCategory cctvAccessories = createSubCategory("CCTV Accessories", accessoriesCategory);
+        SubCategory epabxAccessories = createSubCategory("EPABX Accessories", accessoriesCategory);
         
-        // 11. EPABX & Intercom Service
-        Service epabxService = createService("EPABX & Intercom", "call", "EPABX and intercom systems");
-        ProductCategory epabxIntercom = createCategory("EPABX & Intercom", epabxService);
+        // 11. EPABX & Intercom Category
+        Category epabxCategory = createCategory("EPABX & Intercom", "call", "EPABX and intercom systems");
+        SubCategory epabxIntercom = createSubCategory("EPABX & Intercom", epabxCategory);
         
         System.out.println("All services and categories created. Starting to seed products...");
         
@@ -271,86 +273,86 @@ public class DataSeeder implements CommandLineRunner {
         System.out.println("Starting to seed Analog HD Systems...");
         try { seedAnalogHDSystems(analogHdSystems); } catch (Exception e) { System.err.println("Error seeding Analog HD Systems: " + e.getMessage()); }
         
-        try { seedCCTVProducts(cctvService, ipCameras, ptzCameras, wifiCameras, bulletCameras, domeCameras, dvrSystems, cctvAccessoriesForCCTV); } catch (Exception e) { System.err.println("Error seeding CCTV Products: " + e.getMessage()); }
+        try { seedCCTVProducts(cctvCategory, ipCameras, ptzCameras, wifiCameras, bulletCameras, domeCameras, dvrSystems, cctvAccessoriesForCCTV); } catch (Exception e) { System.err.println("Error seeding CCTV Products: " + e.getMessage()); }
         
         // Seed Computer products
-        try { seedComputerProducts(computersService, desktopPC, printers, monitors, computerAccessories); } catch (Exception e) { System.err.println("Error seeding Computer Products: " + e.getMessage()); }
+        try { seedComputerProducts(computersCategory, desktopPC, printers, monitors, computerAccessories); } catch (Exception e) { System.err.println("Error seeding Computer Products: " + e.getMessage()); }
         
         // Seed Networking products
-        try { seedNetworkingProducts(networkingService, networkSwitches, routers, cables, poeSwitches); } catch (Exception e) { System.err.println("Error seeding Networking Products: " + e.getMessage()); }
+        try { seedNetworkingProducts(networkingCategory, networkSwitches, routers, cables, poeSwitches); } catch (Exception e) { System.err.println("Error seeding Networking Products: " + e.getMessage()); }
         
         // Seed Access Control products
-        try { seedAccessControlProducts(accessControlService, biometricDevices, doorLocks, faceMachines); } catch (Exception e) { System.err.println("Error seeding Access Control Products: " + e.getMessage()); }
+        try { seedAccessControlProducts(accessControlCategory, biometricDevices, doorLocks, faceMachines); } catch (Exception e) { System.err.println("Error seeding Access Control Products: " + e.getMessage()); }
         try { seedBiometrics(biometricDevices); } catch (Exception e) { System.err.println("Error seeding Biometrics: " + e.getMessage()); }
         try { seedElectronicLocks(electronicLocks); } catch (Exception e) { System.err.println("Error seeding Electronic Locks: " + e.getMessage()); }
         try { seedGPSDevices(gpsDevices); } catch (Exception e) { System.err.println("Error seeding GPS Devices: " + e.getMessage()); }
         
         // Seed Fire Alarm products
-        try { seedFireAlarmProducts(fireAlarmService, firePanels, smokeDetectors); } catch (Exception e) { System.err.println("Error seeding Fire Alarm Products: " + e.getMessage()); }
+        try { seedFireAlarmProducts(fireAlarmCategory, firePanels, smokeDetectors); } catch (Exception e) { System.err.println("Error seeding Fire Alarm Products: " + e.getMessage()); }
         try { seedConventionalFireAlarms(conventionalFireAlarms); } catch (Exception e) { System.err.println("Error seeding Conventional Fire Alarms: " + e.getMessage()); }
         try { seedAddressableFireAlarms(addressableFireAlarms); } catch (Exception e) { System.err.println("Error seeding Addressable Fire Alarms: " + e.getMessage()); }
         
         // Seed Video Door Phone products
-        try { seedVideoDoorPhoneProducts(videoDoorPhoneService, videoDoorPhones); } catch (Exception e) { System.err.println("Error seeding Video Door Phone Products: " + e.getMessage()); }
+        try { seedVideoDoorPhoneProducts(videoDoorPhoneCategory, videoDoorPhones); } catch (Exception e) { System.err.println("Error seeding Video Door Phone Products: " + e.getMessage()); }
         try { seedAnalogueVDP(analogueVDP); } catch (Exception e) { System.err.println("Error seeding Analogue VDP: " + e.getMessage()); }
         try { seedIPVDP(ipVDP); } catch (Exception e) { System.err.println("Error seeding IP VDP: " + e.getMessage()); }
         
         // Seed Solar products
-        try { seedSolarProducts(solarService, solarInverters, solarBatteries, solarCables); } catch (Exception e) { System.err.println("Error seeding Solar Products: " + e.getMessage()); }
+        try { seedSolarProducts(solarCategory, solarInverters, solarBatteries, solarCables); } catch (Exception e) { System.err.println("Error seeding Solar Products: " + e.getMessage()); }
         
         // Seed Audio Video products
-        try { seedAudioVideoProducts(audioVideoService, speakers, amplifiers); } catch (Exception e) { System.err.println("Error seeding Audio Video Products: " + e.getMessage()); }
+        try { seedAudioVideoProducts(audioVideoCategory, speakers, amplifiers); } catch (Exception e) { System.err.println("Error seeding Audio Video Products: " + e.getMessage()); }
         
         // Seed Power Supply products
-        try { seedPowerSupplyProducts(powerSupplyService, adapters, ups, powerSupplies); } catch (Exception e) { System.err.println("Error seeding Power Supply Products: " + e.getMessage()); }
+        try { seedPowerSupplyProducts(powerSupplyCategory, adapters, ups, powerSupplies); } catch (Exception e) { System.err.println("Error seeding Power Supply Products: " + e.getMessage()); }
         
         // Seed Accessories products
-        try { seedAccessoriesProducts(accessoriesService, connectors, brackets, storage, cctvAccessories, epabxAccessories); } catch (Exception e) { System.err.println("Error seeding Accessories Products: " + e.getMessage()); }
+        try { seedAccessoriesProducts(accessoriesCategory, connectors, brackets, storage, cctvAccessories, epabxAccessories); } catch (Exception e) { System.err.println("Error seeding Accessories Products: " + e.getMessage()); }
         
         // Seed EPABX products
-        try { seedEPABXProducts(epabxService, epabxAccessories); } catch (Exception e) { System.err.println("Error seeding EPABX Products: " + e.getMessage()); }
+        try { seedEPABXProducts(epabxCategory, epabxAccessories); } catch (Exception e) { System.err.println("Error seeding EPABX Products: " + e.getMessage()); }
         
         System.out.println("All seed methods completed.");
     }
 
-    private Service createService(String name, String icon, String description) {
-        // Check if service already exists
-        Service service = serviceRepository.findByName(name).orElse(null);
-        if (service != null) {
-            System.out.println("Service '" + name + "' already exists, reusing it.");
-            return service;
-        }
-        
-        // Create new service if it doesn't exist
-        service = new Service();
-        service.setName(name);
-        service.setIcon(icon);
-        service.setDescription(description);
-        service = serviceRepository.save(service);
-        System.out.println("Created new service: " + name);
-        return service;
-    }
-
-    private ProductCategory createCategory(String name, Service service) {
-        // Check if category already exists for this service
-        java.util.List<ProductCategory> existingCategories = categoryRepository.findByServiceId(service.getId());
-        for (ProductCategory cat : existingCategories) {
-            if (name.equals(cat.getName())) {
-                return cat; // Reuse existing category
-            }
+    private Category createCategory(String name, String icon, String description) {
+        // Check if category already exists
+        Category category = categoryRepository.findByName(name).orElse(null);
+        if (category != null) {
+            System.out.println("Category '" + name + "' already exists, reusing it.");
+            return category;
         }
         
         // Create new category if it doesn't exist
-        ProductCategory category = new ProductCategory();
+        category = new Category();
         category.setName(name);
-        category.setService(service);
+        category.setIcon(icon);
+        category.setDescription(description);
         category = categoryRepository.save(category);
+        System.out.println("Created new category: " + name);
         return category;
     }
 
-    private Brand createBrand(String name, ProductCategory category) {
-        // Check if brand already exists for this category
-        java.util.List<Brand> existingBrands = brandRepository.findByCategoryId(category.getId());
+    private SubCategory createSubCategory(String name, Category category) {
+        // Check if sub category already exists for this category
+        java.util.List<SubCategory> existingSubCategories = subCategoryRepository.findByCategoryId(category.getId());
+        for (SubCategory subCat : existingSubCategories) {
+            if (name.equals(subCat.getName())) {
+                return subCat; // Reuse existing sub category
+            }
+        }
+        
+        // Create new sub category if it doesn't exist
+        SubCategory subCategory = new SubCategory();
+        subCategory.setName(name);
+        subCategory.setCategory(category);
+        subCategory = subCategoryRepository.save(subCategory);
+        return subCategory;
+    }
+
+    private Brand createBrand(String name, SubCategory subCategory) {
+        // Check if brand already exists for this sub category
+        java.util.List<Brand> existingBrands = brandRepository.findBySubCategoryId(subCategory.getId());
         for (Brand b : existingBrands) {
             if (name.equals(b.getName())) {
                 return b; // Reuse existing brand
@@ -360,7 +362,7 @@ public class DataSeeder implements CommandLineRunner {
         // Create new brand if it doesn't exist
         Brand brand = new Brand();
         brand.setName(name);
-        brand.setCategory(category);
+        brand.setSubCategory(subCategory);
         brand = brandRepository.save(brand);
         return brand;
     }
@@ -407,10 +409,10 @@ public class DataSeeder implements CommandLineRunner {
         return product;
     }
 
-    private void seedCCTVProducts(Service cctvService, ProductCategory ipCameras, ProductCategory ptzCameras,
-                                  ProductCategory wifiCameras, ProductCategory bulletCameras,
-                                  ProductCategory domeCameras, ProductCategory dvrSystems,
-                                  ProductCategory cctvAccessories) {
+    private void seedCCTVProducts(Category cctvCategory, SubCategory ipCameras, SubCategory ptzCameras,
+                                  SubCategory wifiCameras, SubCategory bulletCameras,
+                                  SubCategory domeCameras, SubCategory dvrSystems,
+                                  SubCategory cctvAccessories) {
         
         // Prama IP Camera
         Brand prama = createBrand("Prama", ipCameras);
@@ -632,9 +634,9 @@ public class DataSeeder implements CommandLineRunner {
                    "Weatherproof", "IP66", "Power Supply", "12VDC", "Warranty", "2 Years"));
     }
 
-    private void seedComputerProducts(Service computersService, ProductCategory desktopPC,
-                                     ProductCategory printers, ProductCategory monitors,
-                                     ProductCategory computerAccessories) {
+    private void seedComputerProducts(Category computersCategory, SubCategory desktopPC,
+                                     SubCategory printers, SubCategory monitors,
+                                     SubCategory computerAccessories) {
         
         // HP Desktop PC
         Brand hp = createBrand("HP", desktopPC);
@@ -681,9 +683,9 @@ public class DataSeeder implements CommandLineRunner {
                    "Warranty", "1 Year"));
     }
 
-    private void seedNetworkingProducts(Service networkingService, ProductCategory networkSwitches,
-                                       ProductCategory routers, ProductCategory cables,
-                                       ProductCategory poeSwitches) {
+    private void seedNetworkingProducts(Category networkingCategory, SubCategory networkSwitches,
+                                       SubCategory routers, SubCategory cables,
+                                       SubCategory poeSwitches) {
         
         // D-Link 10-Port Switch
         Brand dlink = createBrand("D-Link", networkSwitches);
@@ -853,8 +855,8 @@ public class DataSeeder implements CommandLineRunner {
                    "Gauge", "24 AWG", "Material", "Pure Copper", "Warranty", "2 Years"));
     }
 
-    private void seedAccessControlProducts(Service accessControlService, ProductCategory biometricDevices,
-                                          ProductCategory doorLocks, ProductCategory faceMachines) {
+    private void seedAccessControlProducts(Category accessControlCategory, SubCategory biometricDevices,
+                                          SubCategory doorLocks, SubCategory faceMachines) {
         
         // Essel Biometric Device
         Brand essel = createBrand("Essel", biometricDevices);
@@ -914,8 +916,8 @@ public class DataSeeder implements CommandLineRunner {
                    "Display", "Color LCD", "Connectivity", "TCP/IP, USB", "Warranty", "2 Years"));
     }
 
-    private void seedFireAlarmProducts(Service fireAlarmService, ProductCategory firePanels,
-                                      ProductCategory smokeDetectors) {
+    private void seedFireAlarmProducts(Category fireAlarmCategory, SubCategory firePanels,
+                                      SubCategory smokeDetectors) {
         
         // Impact Fire Alarm Panel
         Brand impact = createBrand("Impact", firePanels);
@@ -947,7 +949,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Standards", "EN54", "Sensitivity", "Adjustable", "Warranty", "2 Years"));
     }
 
-    private void seedVideoDoorPhoneProducts(Service videoDoorPhoneService, ProductCategory videoDoorPhones) {
+    private void seedVideoDoorPhoneProducts(Category videoDoorPhoneCategory, SubCategory videoDoorPhones) {
         
         // True View Video Doorbell
         Brand trueView = createBrand("True View", videoDoorPhones);
@@ -1000,8 +1002,8 @@ public class DataSeeder implements CommandLineRunner {
                    "Mobile App", "Yes", "Night Vision", "Yes", "Warranty", "2 Years"));
     }
 
-    private void seedSolarProducts(Service solarService, ProductCategory solarInverters,
-                                  ProductCategory solarBatteries, ProductCategory solarCables) {
+    private void seedSolarProducts(Category solarCategory, SubCategory solarInverters,
+                                  SubCategory solarBatteries, SubCategory solarCables) {
         
         // Solar Inverter UTL
         Brand utl = createBrand("UTL", solarInverters);
@@ -1034,8 +1036,8 @@ public class DataSeeder implements CommandLineRunner {
                    "UV Resistant", "Yes", "Length", "100 meters", "Warranty", "2 Years"));
     }
 
-    private void seedAudioVideoProducts(Service audioVideoService, ProductCategory speakers,
-                                       ProductCategory audioBoxes) {
+    private void seedAudioVideoProducts(Category audioVideoCategory, SubCategory speakers,
+                                       SubCategory audioBoxes) {
         
         // Ahuja Speaker
         Brand ahuja = createBrand("Ahuja", speakers);
@@ -1067,8 +1069,8 @@ public class DataSeeder implements CommandLineRunner {
                    "Range", "Up to 100m", "Volume Control", "Yes", "Warranty", "1 Year"));
     }
 
-    private void seedPowerSupplyProducts(Service powerSupplyService, ProductCategory adapters,
-                                        ProductCategory ups, ProductCategory powerSupplies) {
+    private void seedPowerSupplyProducts(Category powerSupplyCategory, SubCategory adapters,
+                                        SubCategory ups, SubCategory powerSupplies) {
         
         // Consistent Adapter 2MP
         Brand consistent = createBrand("Consistent", adapters);
@@ -1130,9 +1132,9 @@ public class DataSeeder implements CommandLineRunner {
                    "Output", "220V AC", "Surge Protection", "Yes", "Warranty", "1 Year"));
     }
 
-    private void seedAccessoriesProducts(Service accessoriesService, ProductCategory connectors,
-                                        ProductCategory brackets, ProductCategory storage,
-                                        ProductCategory cctvAccessories, ProductCategory epabxAccessories) {
+    private void seedAccessoriesProducts(Category accessoriesCategory, SubCategory connectors,
+                                        SubCategory brackets, SubCategory storage,
+                                        SubCategory cctvAccessories, SubCategory epabxAccessories) {
         
         // WD Hard Disk 1TB
         Brand wd = createBrand("WD", storage);
@@ -1349,13 +1351,13 @@ public class DataSeeder implements CommandLineRunner {
                    "Audio", "Clear", "Design", "Ergonomic", "Warranty", "1 Year"));
     }
 
-    private void seedEPABXProducts(Service epabxService, ProductCategory epabxAccessories) {
+    private void seedEPABXProducts(Category epabxCategory, SubCategory epabxAccessories) {
         // EPABX accessories are already covered in accessories
     }
 
     // ========== NEW SEEDING METHODS FOR CLIENT REQUIREMENTS ==========
     
-    private void seedIPHDSystems(ProductCategory ipHdSystems) {
+    private void seedIPHDSystems(SubCategory ipHdSystems) {
         // IP HD System Components: IP Cameras, NVR, POE Switches, CAT 6 Cables, Hard Disk, Connectors
         // Brands: Prama, CP Plus, Hikvision, Trueview, Consistent
         
@@ -1468,7 +1470,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Warranty", "1 Year"));
     }
     
-    private void seedAnalogHDSystems(ProductCategory analogHdSystems) {
+    private void seedAnalogHDSystems(SubCategory analogHdSystems) {
         // Analog HD System Components: Analog Camera, DVR, 3+1 Cable, Hard Disk, Connectors
         // Used for non-commercial/residential use - Economic budget solution
         
@@ -1538,7 +1540,7 @@ public class DataSeeder implements CommandLineRunner {
             Map.of("Type", "BNC Connector", "Gold Plated", "Yes", "Pack", "10 pieces", "Warranty", "1 Year"));
     }
     
-    private void seedConventionalFireAlarms(ProductCategory conventionalFireAlarms) {
+    private void seedConventionalFireAlarms(SubCategory conventionalFireAlarms) {
         // Conventional Fire Alarm Systems - Economic, small premises, no specific location
         // Brands: Agni, Notifier, Bosch, Honeywell, Ravel
         
@@ -1573,7 +1575,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Installation", "Easy", "Warranty", "2 Years"));
     }
     
-    private void seedAddressableFireAlarms(ProductCategory addressableFireAlarms) {
+    private void seedAddressableFireAlarms(SubCategory addressableFireAlarms) {
         // Analogue Addressable Fire Alarm Systems - Exact location, costly, precise
         // Brands: Agni, Notifier, Bosch, Honeywell, Ravel
         
@@ -1608,7 +1610,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Installation", "Loop Wiring", "Warranty", "2 Years"));
     }
     
-    private void seedBiometrics(ProductCategory biometrics) {
+    private void seedBiometrics(SubCategory biometrics) {
         // Biometrics - Uses: Access Control, Time & Attendance, Visitor Management, Employee Identification
         // Brands: Essl, Secureye, Matrix, Hikvision, Realtime
         
@@ -1643,7 +1645,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Speed", "< 0.5 seconds", "Display", "Color LCD", "Warranty", "2 Years On-site"));
     }
     
-    private void seedAnalogueVDP(ProductCategory analogueVDP) {
+    private void seedAnalogueVDP(SubCategory analogueVDP) {
         // Analogue VDP - Economic, single to 3 doors, works with outdoor/indoor station
         // Brands: Hikvision, CP Plus, Secureye, Honeywell
         
@@ -1669,7 +1671,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Door Lock", "Electronic Lock Support", "Warranty", "2 Years On-site"));
     }
     
-    private void seedIPVDP(ProductCategory ipVDP) {
+    private void seedIPVDP(SubCategory ipVDP) {
         // IP VDP - Advanced, mobile app, remote unlock, internet connectivity
         // Brands: Hikvision, CP Plus, Secureye, Honeywell
         
@@ -1696,7 +1698,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Motion Detection", "Yes", "Night Vision", "Yes", "Warranty", "2 Years On-site"));
     }
     
-    private void seedElectronicLocks(ProductCategory electronicLocks) {
+    private void seedElectronicLocks(SubCategory electronicLocks) {
         // Electronic Locks - Features: Keyless Entry, Mobile App Control, Remote Access, PIN Code, Biometric Integration, Auto-lock, Access Logs, Guest Access, Battery Backup, Tamper Alerts
         // Brands: Essl, Yale, Godrej
         
@@ -1729,7 +1731,7 @@ public class DataSeeder implements CommandLineRunner {
                    "Battery", "Rechargeable", "Tamper Alert", "Yes", "Warranty", "2 Years On-site"));
     }
     
-    private void seedGPSDevices(ProductCategory gpsDevices) {
+    private void seedGPSDevices(SubCategory gpsDevices) {
         // GPS Devices for Vehicles - New category
         
         Brand consistent = createBrand("Consistent", gpsDevices);

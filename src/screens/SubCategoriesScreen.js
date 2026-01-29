@@ -13,36 +13,36 @@ import Header from '../components/Header';
 import { COLORS } from '../utils/constants';
 import { productAPI } from '../services/api';
 
-const ProductCategoriesScreen = () => {
+const SubCategoriesScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const service = route.params?.service;
-  const [categories, setCategories] = useState([]);
+  const category = route.params?.category;
+  const [subCategories, setSubCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (service?.id) {
-      loadCategories();
+    if (category?.id) {
+      loadSubCategories();
     }
-  }, [service]);
+  }, [category]);
 
-  const loadCategories = async () => {
+  const loadSubCategories = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getCategoriesByService(service.id);
-      setCategories(response.data);
+      const response = await productAPI.getSubCategoriesByCategory(category.id);
+      setSubCategories(response.data);
     } catch (error) {
-      console.error('Error loading categories:', error);
-      setCategories([]);
+      console.error('Error loading sub categories:', error);
+      setSubCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderCategory = ({ item }) => (
+  const renderSubCategory = ({ item }) => (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => navigation.navigate('Brands', { category: item, service })}
+      onPress={() => navigation.navigate('Brands', { subCategory: item, category })}
       activeOpacity={0.7}
     >
       <View style={styles.categoryIcon}>
@@ -56,10 +56,10 @@ const ProductCategoriesScreen = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header title={service?.name || 'Categories'} />
+        <Header title={category?.name || 'Sub Categories'} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading categories...</Text>
+          <Text style={styles.loadingText}>Loading sub categories...</Text>
         </View>
       </View>
     );
@@ -67,20 +67,20 @@ const ProductCategoriesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title={service?.name || 'Categories'} />
-      {categories.length > 0 ? (
+      <Header title={category?.name || 'Sub Categories'} />
+      {subCategories.length > 0 ? (
         <>
           <TouchableOpacity
             style={styles.serviceRequestButton}
-            onPress={() => navigation.navigate('ServiceRequest', { service })}
+            onPress={() => navigation.navigate('ServiceRequest', { category })}
             activeOpacity={0.7}
           >
             <Ionicons name="construct-outline" size={24} color={COLORS.background} />
             <Text style={styles.serviceRequestButtonText}>Raise Service Request</Text>
           </TouchableOpacity>
           <FlatList
-            data={categories}
-            renderItem={renderCategory}
+            data={subCategories}
+            renderItem={renderSubCategory}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
@@ -89,13 +89,13 @@ const ProductCategoriesScreen = () => {
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="grid-outline" size={64} color={COLORS.textLight} />
-          <Text style={styles.emptyText}>No categories found</Text>
+          <Text style={styles.emptyText}>No sub categories found</Text>
           <Text style={styles.emptySubtext}>
-            Categories will be added soon
+            Sub categories will be added soon
           </Text>
           <TouchableOpacity
             style={[styles.serviceRequestButton, styles.serviceRequestButtonEmpty]}
-            onPress={() => navigation.navigate('ServiceRequest', { service })}
+            onPress={() => navigation.navigate('ServiceRequest', { category })}
             activeOpacity={0.7}
           >
             <Ionicons name="construct-outline" size={24} color={COLORS.background} />
@@ -198,4 +198,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductCategoriesScreen;
+export default SubCategoriesScreen;

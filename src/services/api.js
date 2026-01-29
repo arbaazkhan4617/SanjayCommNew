@@ -14,6 +14,11 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
+    // Don't set Content-Type for FormData - let axios handle it automatically
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
     // Add auth token if available
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -55,17 +60,17 @@ export const authAPI = {
 };
 
 export const productAPI = {
-  // Services
-  getServices: () => api.get('/products/services'),
-  getServiceById: (id) => api.get(`/products/services/${id}`),
-  
   // Categories
-  getCategoriesByService: (serviceId) => 
-    api.get(`/products/services/${serviceId}/categories`),
+  getCategories: () => api.get('/products/categories'),
+  getCategoryById: (id) => api.get(`/products/categories/${id}`),
+  
+  // Sub Categories
+  getSubCategoriesByCategory: (categoryId) => 
+    api.get(`/products/categories/${categoryId}/sub-categories`),
   
   // Brands
-  getBrandsByCategory: (categoryId) => 
-    api.get(`/products/categories/${categoryId}/brands`),
+  getBrandsBySubCategory: (subCategoryId) => 
+    api.get(`/products/sub-categories/${subCategoryId}/brands`),
   
   // Models
   getModelsByBrand: (brandId) => 
@@ -127,6 +132,151 @@ export const salesAPI = {
 
 export const adminAPI = {
   login: (email, password) => api.post('/auth/admin/login', { email, password }),
+  // Image Upload
+  uploadImage: async (asset) => {
+    console.log('Uploading image asset:', asset);
+    console.log('Asset keys:', Object.keys(asset));
+    
+    // Validate asset has required properties
+    if (!asset || !asset.uri) {
+      throw new Error('Invalid asset: missing URI');
+    }
+    
+    // Extract file name from URI if fileName is not provided
+    let fileName = asset.fileName || asset.uri.split('/').pop() || 'image.jpg';
+    
+    // Clean up filename - remove query parameters if any
+    fileName = fileName.split('?')[0];
+    
+    // Ensure file name has an extension
+    if (!fileName.includes('.')) {
+      fileName = fileName + '.jpg';
+    }
+    
+    // Determine MIME type from file extension or use default
+    let mimeType = asset.type || 'image/jpeg';
+    if (!asset.type) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+      };
+      mimeType = mimeTypes[ext] || 'image/jpeg';
+    }
+    
+    // Normalize URI - ensure it's in the correct format for React Native
+    let fileUri = asset.uri;
+    
+    // Handle different URI formats
+    // iOS: file:///path/to/file
+    // Android: content://media/external/images/media/123 or file:///path/to/file
+    // Remove file:// prefix if present, React Native FormData handles it
+    if (fileUri.startsWith('file://')) {
+      // Keep file:// for React Native FormData
+      fileUri = fileUri;
+    } else if (fileUri.startsWith('/')) {
+      // If it's an absolute path, add file://
+      fileUri = `file://${fileUri}`;
+    }
+    
+    // Create FormData - in React Native, FormData.append for files needs specific structure
+    const formData = new FormData();
+    
+    // For React Native, the file object must be a plain object with uri, type, and name
+    // The field name must match what backend expects: 'file'
+    // IMPORTANT: The object structure must be exactly: { uri, type, name }
+    const fileObject = {
+      uri: fileUri,
+      type: mimeType,
+      name: fileName,
+    };
+    
+    console.log('FormData file object:', fileObject);
+    console.log('File URI:', fileUri);
+    console.log('MIME type:', mimeType);
+    console.log('File name:', fileName);
+    console.log('Sending to:', `${API_BASE_URL}/admin/upload-image`);
+    
+    // Append file to FormData with exact field name 'file'
+    formData.append('file', fileObject);
+    
+    // Debug: Log FormData (note: FormData doesn't serialize well, but we can check structure)
+    console.log('FormData created successfully');
+    
+    // Get auth headers
+    let headers = {};
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        if (user.id) {
+          headers['X-User-Id'] = user.id.toString();
+        }
+      }
+    } catch (error) {
+      console.error('Error getting user from storage:', error);
+    }
+    
+    try {
+      // Use axios with proper FormData configuration
+      // Create a new axios instance for this request to avoid interceptor issues
+      const uploadApi = axios.create({
+        baseURL: API_BASE_URL,
+        timeout: 60000,
+        // Don't set default Content-Type - axios will set it for FormData
+      });
+      
+      // Add headers
+      const config = {
+        headers: {
+          ...headers,
+          // Explicitly do NOT set Content-Type - axios will set multipart/form-data with boundary
+        },
+        // Transform request to ensure FormData is sent correctly
+        transformRequest: (data) => {
+          // Return FormData as-is
+          return data;
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Upload progress: ${percentCompleted}%`);
+          }
+        },
+      };
+      
+      console.log('Sending FormData via axios...');
+      console.log('File details:', {
+        uri: fileUri,
+        type: mimeType,
+        name: fileName,
+      });
+      
+      const response = await uploadApi.post('/admin/upload-image', formData, config);
+      
+      console.log('Upload response:', response.data);
+      
+      // Return in axios response format for consistency
+      return { data: { imageUrl: response.data.imageUrl } };
+    } catch (error) {
+      console.error('Upload error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      // Return error in axios format
+      const uploadError = new Error(error.response?.data?.error || error.message || 'Failed to upload image');
+      uploadError.response = error.response;
+      throw uploadError;
+    }
+  },
   // Products
   getAllProducts: () => api.get('/admin/products'),
   getProductById: (id) => api.get(`/admin/products/${id}`),
@@ -143,13 +293,16 @@ export const adminAPI = {
   createBrand: (data) => api.post('/admin/brands', data),
   updateBrand: (id, data) => api.put(`/admin/brands/${id}`, data),
   deleteBrand: (id) => api.delete(`/admin/brands/${id}`),
+  // Sub Categories
+  getAllSubCategories: () => api.get('/admin/sub-categories'),
+  createSubCategory: (data) => api.post('/admin/sub-categories', data),
+  updateSubCategory: (id, data) => api.put(`/admin/sub-categories/${id}`, data),
+  deleteSubCategory: (id) => api.delete(`/admin/sub-categories/${id}`),
   // Categories
   getAllCategories: () => api.get('/admin/categories'),
   createCategory: (data) => api.post('/admin/categories', data),
   updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
-  // Services
-  getAllServices: () => api.get('/admin/services'),
 };
 
 export default api;

@@ -16,21 +16,21 @@ import { productAPI } from '../services/api';
 const BrandsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
+  const subCategory = route.params?.subCategory;
   const category = route.params?.category;
-  const service = route.params?.service;
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (category?.id) {
+    if (subCategory?.id) {
       loadBrands();
     }
-  }, [category]);
+  }, [subCategory]);
 
   const loadBrands = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getBrandsByCategory(category.id);
+      const response = await productAPI.getBrandsBySubCategory(subCategory.id);
       setBrands(response.data);
     } catch (error) {
       console.error('Error loading brands:', error);
@@ -43,7 +43,7 @@ const BrandsScreen = () => {
   const renderBrand = ({ item }) => (
     <TouchableOpacity
       style={styles.brandCard}
-      onPress={() => navigation.navigate('Models', { brand: item, category, service })}
+      onPress={() => navigation.navigate('Models', { brand: item, subCategory, category })}
       activeOpacity={0.7}
     >
       <View style={styles.brandIcon}>
@@ -51,7 +51,7 @@ const BrandsScreen = () => {
       </View>
       <View style={styles.brandInfo}>
         <Text style={styles.brandName}>{item.name}</Text>
-        <Text style={styles.brandCategory}>{category?.name}</Text>
+        <Text style={styles.brandCategory}>{subCategory?.name}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
     </TouchableOpacity>
@@ -60,7 +60,7 @@ const BrandsScreen = () => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header title={`${category?.name} - Brands`} />
+        <Header title={`${subCategory?.name} - Brands`} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading brands...</Text>
@@ -71,12 +71,12 @@ const BrandsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title={`${category?.name} - Brands`} />
+      <Header title={`${subCategory?.name} - Brands`} />
       {brands.length > 0 ? (
         <>
           <TouchableOpacity
             style={styles.serviceRequestButton}
-            onPress={() => navigation.navigate('ServiceRequest', { service, category })}
+            onPress={() => navigation.navigate('ServiceRequest', { category, subCategory })}
             activeOpacity={0.7}
           >
             <Ionicons name="construct-outline" size={24} color={COLORS.background} />
@@ -99,7 +99,7 @@ const BrandsScreen = () => {
           </Text>
           <TouchableOpacity
             style={[styles.serviceRequestButton, styles.serviceRequestButtonEmpty]}
-            onPress={() => navigation.navigate('ServiceRequest', { service, category })}
+            onPress={() => navigation.navigate('ServiceRequest', { category, subCategory })}
             activeOpacity={0.7}
           >
             <Ionicons name="construct-outline" size={24} color={COLORS.background} />

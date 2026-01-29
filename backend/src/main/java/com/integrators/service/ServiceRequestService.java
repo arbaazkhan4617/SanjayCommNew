@@ -2,7 +2,8 @@ package com.integrators.service;
 
 import com.integrators.dto.CreateServiceRequestDTO;
 import com.integrators.dto.ServiceRequestDTO;
-import com.integrators.entity.ProductCategory;
+import com.integrators.entity.Category;
+import com.integrators.entity.SubCategory;
 import com.integrators.entity.ServiceRequest;
 import com.integrators.entity.User;
 import com.integrators.repository.*;
@@ -16,14 +17,14 @@ import java.util.stream.Collectors;
 public class ServiceRequestService {
     private final ServiceRequestRepository serviceRequestRepository;
     private final UserRepository userRepository;
-    private final ServiceRepository serviceRepository;
-    private final ProductCategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
 
-    public ServiceRequestService(ServiceRequestRepository serviceRequestRepository, UserRepository userRepository, ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository) {
+    public ServiceRequestService(ServiceRequestRepository serviceRequestRepository, UserRepository userRepository, CategoryRepository categoryRepository, SubCategoryRepository subCategoryRepository) {
         this.serviceRequestRepository = serviceRequestRepository;
         this.userRepository = userRepository;
-        this.serviceRepository = serviceRepository;
         this.categoryRepository = categoryRepository;
+        this.subCategoryRepository = subCategoryRepository;
     }
 
     public List<ServiceRequestDTO> getUserServiceRequests(Long userId) {
@@ -59,16 +60,16 @@ public class ServiceRequestService {
         request.setAddress(dto.getAddress());
         request.setStatus("PENDING");
 
-        if (dto.getServiceId() != null) {
-            com.integrators.entity.Service service = serviceRepository.findById(dto.getServiceId())
-                    .orElse(null);
-            request.setService(service);
-        }
-
         if (dto.getCategoryId() != null) {
-            ProductCategory category = categoryRepository.findById(dto.getCategoryId())
+            Category category = categoryRepository.findById(dto.getCategoryId())
                     .orElse(null);
             request.setCategory(category);
+        }
+
+        if (dto.getSubCategoryId() != null) {
+            SubCategory subCategory = subCategoryRepository.findById(dto.getSubCategoryId())
+                    .orElse(null);
+            request.setSubCategory(subCategory);
         }
 
         request = serviceRequestRepository.save(request);
@@ -100,14 +101,14 @@ public class ServiceRequestService {
         dto.setCreatedAt(request.getCreatedAt());
         dto.setUpdatedAt(request.getUpdatedAt());
 
-        if (request.getService() != null) {
-            dto.setServiceId(request.getService().getId());
-            dto.setServiceName(request.getService().getName());
-        }
-
         if (request.getCategory() != null) {
             dto.setCategoryId(request.getCategory().getId());
             dto.setCategoryName(request.getCategory().getName());
+        }
+
+        if (request.getSubCategory() != null) {
+            dto.setSubCategoryId(request.getSubCategory().getId());
+            dto.setSubCategoryName(request.getSubCategory().getName());
         }
 
         return dto;

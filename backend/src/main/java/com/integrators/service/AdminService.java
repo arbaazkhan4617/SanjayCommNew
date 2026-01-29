@@ -10,31 +10,37 @@ import com.integrators.dto.*;
 import com.integrators.entity.Brand;
 import com.integrators.entity.Model;
 import com.integrators.entity.Product;
-import com.integrators.entity.ProductCategory;
+import com.integrators.entity.SubCategory;
+import com.integrators.entity.Category;
+import com.integrators.entity.ProductImage;
 import com.integrators.repository.BrandRepository;
 import com.integrators.repository.ModelRepository;
-import com.integrators.repository.ProductCategoryRepository;
+import com.integrators.repository.SubCategoryRepository;
+import com.integrators.repository.CategoryRepository;
+import com.integrators.repository.ProductImageRepository;
 import com.integrators.repository.ProductRepository;
-import com.integrators.repository.ServiceRepository;
 
 @Service
 public class AdminService {
     private final ProductRepository productRepository;
     private final ModelRepository modelRepository;
     private final BrandRepository brandRepository;
-    private final ProductCategoryRepository categoryRepository;
-    private final ServiceRepository serviceRepository;
+    private final SubCategoryRepository subCategoryRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductService productService;
+    private final ProductImageRepository productImageRepository;
 
     public AdminService(ProductRepository productRepository, ModelRepository modelRepository,
-                       BrandRepository brandRepository, ProductCategoryRepository categoryRepository,
-                       ServiceRepository serviceRepository, ProductService productService) {
+                       BrandRepository brandRepository, SubCategoryRepository subCategoryRepository,
+                       CategoryRepository categoryRepository, ProductService productService,
+                       ProductImageRepository productImageRepository) {
         this.productRepository = productRepository;
         this.modelRepository = modelRepository;
-        this.categoryRepository = categoryRepository;
+        this.subCategoryRepository = subCategoryRepository;
         this.brandRepository = brandRepository;
-        this.serviceRepository = serviceRepository;
+        this.categoryRepository = categoryRepository;
         this.productService = productService;
+        this.productImageRepository = productImageRepository;
     }
 
     // Product CRUD
@@ -88,7 +94,28 @@ public class AdminService {
         product.setModel(model);
         product.setSpecifications(dto.getSpecifications());
 
+        // Delete existing images
+        productImageRepository.deleteByProductId(product.getId());
+
         product = productRepository.save(product);
+
+        // Save new product images
+        if (dto.getImageUrls() != null && !dto.getImageUrls().isEmpty()) {
+            List<ProductImage> images = new java.util.ArrayList<>();
+            for (int i = 0; i < dto.getImageUrls().size(); i++) {
+                String imageUrl = dto.getImageUrls().get(i);
+                if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                    ProductImage productImage = new ProductImage();
+                    productImage.setImageUrl(imageUrl);
+                    productImage.setProduct(product);
+                    productImage.setDisplayOrder(i);
+                    images.add(productImage);
+                }
+            }
+            productImageRepository.saveAll(images);
+            product.getImages().addAll(images);
+        }
+
         return productService.convertToProductResponseDTO(product);
     }
 
@@ -158,12 +185,12 @@ public class AdminService {
     // Brand CRUD
     @Transactional
     public BrandDTO createBrand(CreateBrandDTO dto) {
-        ProductCategory category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+        SubCategory subCategory = subCategoryRepository.findById(dto.getSubCategoryId())
+                .orElseThrow(() -> new RuntimeException("Sub Category not found"));
 
         Brand brand = new Brand();
         brand.setName(dto.getName());
-        brand.setCategory(category);
+        brand.setSubCategory(subCategory);
 
         brand = brandRepository.save(brand);
         return productService.convertToBrandDTO(brand);
@@ -174,11 +201,11 @@ public class AdminService {
         Brand brand = brandRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Brand not found"));
 
-        ProductCategory category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+        SubCategory subCategory = subCategoryRepository.findById(dto.getSubCategoryId())
+                .orElseThrow(() -> new RuntimeException("Sub Category not found"));
 
         brand.setName(dto.getName());
-        brand.setCategory(category);
+        brand.setSubCategory(subCategory);
 
         brand = brandRepository.save(brand);
         return productService.convertToBrandDTO(brand);
@@ -197,30 +224,68 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    // SubCategory CRUD
+    @Transactional
+    public SubCategoryDTO createSubCategory(CreateSubCategoryDTO dto) {
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        SubCategory subCategory = new SubCategory();
+        subCategory.setName(dto.getName());
+        subCategory.setCategory(category);
+
+        subCategory = subCategoryRepository.save(subCategory);
+        return productService.convertToSubCategoryDTO(subCategory);
+    }
+
+    @Transactional
+    public SubCategoryDTO updateSubCategory(Long id, CreateSubCategoryDTO dto) {
+        SubCategory subCategory = subCategoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sub Category not found"));
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        subCategory.setName(dto.getName());
+        subCategory.setCategory(category);
+
+        subCategory = subCategoryRepository.save(subCategory);
+        return productService.convertToSubCategoryDTO(subCategory);
+    }
+
+    @Transactional
+    public void deleteSubCategory(Long id) {
+        SubCategory subCategory = subCategoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sub Category not found"));
+        subCategoryRepository.delete(subCategory);
+    }
+
+    public List<SubCategoryDTO> getAllSubCategories() {
+        return subCategoryRepository.findAll().stream()
+                .map(productService::convertToSubCategoryDTO)
+                .collect(Collectors.toList());
+    }
+
     // Category CRUD
     @Transactional
-    public ProductCategoryDTO createCategory(CreateCategoryDTO dto) {
-        com.integrators.entity.Service service = serviceRepository.findById(dto.getServiceId())
-                .orElseThrow(() -> new RuntimeException("Service not found"));
-
-        ProductCategory category = new ProductCategory();
+    public CategoryDTO createCategory(CreateCategoryDTO dto) {
+        Category category = new Category();
         category.setName(dto.getName());
-        category.setService(service);
+        category.setIcon(dto.getIcon());
+        category.setDescription(dto.getDescription());
 
         category = categoryRepository.save(category);
         return productService.convertToCategoryDTO(category);
     }
 
     @Transactional
-    public ProductCategoryDTO updateCategory(Long id, CreateCategoryDTO dto) {
-        ProductCategory category = categoryRepository.findById(id)
+    public CategoryDTO updateCategory(Long id, CreateCategoryDTO dto) {
+        Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        com.integrators.entity.Service service = serviceRepository.findById(dto.getServiceId())
-                .orElseThrow(() -> new RuntimeException("Service not found"));
-
         category.setName(dto.getName());
-        category.setService(service);
+        category.setIcon(dto.getIcon());
+        category.setDescription(dto.getDescription());
 
         category = categoryRepository.save(category);
         return productService.convertToCategoryDTO(category);
@@ -228,18 +293,12 @@ public class AdminService {
 
     @Transactional
     public void deleteCategory(Long id) {
-        ProductCategory category = categoryRepository.findById(id)
+        Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         categoryRepository.delete(category);
     }
 
-    public List<ProductCategoryDTO> getAllCategories() {
-        return categoryRepository.findAll().stream()
-                .map(productService::convertToCategoryDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<ServiceDTO> getAllServices() {
-        return productService.getAllServices();
+    public List<CategoryDTO> getAllCategories() {
+        return productService.getAllCategories();
     }
 }

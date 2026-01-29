@@ -1,6 +1,8 @@
 package com.integrators.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ProductResponseDTO {
@@ -12,12 +14,13 @@ public class ProductResponseDTO {
 	private Boolean inStock;
 	private Double rating;
 	private Integer reviews;
-	private String image;
+	private String image; // Keep for backward compatibility (from model)
+	private List<String> images = new ArrayList<>(); // Multiple product images
 	private Map<String, String> specifications;
 	private ModelInfoDTO model;
 	private BrandInfoDTO brand;
+	private SubCategoryInfoDTO subCategory;
 	private CategoryInfoDTO category;
-	private ServiceInfoDTO service;
 
 	public static class ModelInfoDTO {
 		private Long id;
@@ -114,15 +117,15 @@ public class ProductResponseDTO {
 
 	}
 
-	public static class ServiceInfoDTO {
+	public static class SubCategoryInfoDTO {
 		private Long id;
 		private String name;
 
 		// Constructors
-		public ServiceInfoDTO() {
+		public SubCategoryInfoDTO() {
 		}
 
-		public ServiceInfoDTO(Long id, String name) {
+		public SubCategoryInfoDTO(Long id, String name) {
 			this.id = id;
 			this.name = name;
 		}
@@ -250,19 +253,27 @@ public class ProductResponseDTO {
 		this.category = category;
 	}
 
-	public ServiceInfoDTO getService() {
-		return service;
+	public SubCategoryInfoDTO getSubCategory() {
+		return subCategory;
 	}
 
-	public void setService(ServiceInfoDTO service) {
-		this.service = service;
+	public void setSubCategory(SubCategoryInfoDTO subCategory) {
+		this.subCategory = subCategory;
+	}
+
+	public List<String> getImages() {
+		return images;
+	}
+
+	public void setImages(List<String> images) {
+		this.images = images != null ? images : new ArrayList<>();
 	}
 
 	// Constructors
 	public ProductResponseDTO() {
 	}
 
-	public ProductResponseDTO(Long id, String name, String description, BigDecimal price, BigDecimal originalPrice, Boolean inStock, Double rating, Integer reviews, String image, Map<String, String> specifications, ModelInfoDTO model, BrandInfoDTO brand, CategoryInfoDTO category, ServiceInfoDTO service) {
+	public ProductResponseDTO(Long id, String name, String description, BigDecimal price, BigDecimal originalPrice, Boolean inStock, Double rating, Integer reviews, String image, Map<String, String> specifications, ModelInfoDTO model, BrandInfoDTO brand, SubCategoryInfoDTO subCategory, CategoryInfoDTO category) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
@@ -275,8 +286,8 @@ public class ProductResponseDTO {
 		this.specifications = specifications;
 		this.model = model;
 		this.brand = brand;
+		this.subCategory = subCategory;
 		this.category = category;
-		this.service = service;
 	}
 
 }

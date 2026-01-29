@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCart } from '../context/CartContext';
 import { COLORS } from '../utils/constants';
 
@@ -9,6 +10,7 @@ const Header = ({ title, showSearch = true, showCart = true, showHome = true }) 
   const navigation = useNavigation();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
+  const insets = useSafeAreaInsets();
 
   const handleHomePress = () => {
     // Navigate to Home tab
@@ -41,7 +43,7 @@ const Header = ({ title, showSearch = true, showCart = true, showHome = true }) 
   };
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
       <View style={styles.leftButtons}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}

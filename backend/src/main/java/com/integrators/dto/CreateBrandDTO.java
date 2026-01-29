@@ -7,8 +7,8 @@ public class CreateBrandDTO {
     @NotBlank(message = "Brand name is required")
     private String name;
     
-    @NotNull(message = "Category ID is required")
-    private Long categoryId;
+    @NotNull(message = "Sub Category ID is required")
+    private Long subCategoryId;
 
     public CreateBrandDTO() {
     }
@@ -21,11 +21,11 @@ public class CreateBrandDTO {
         this.name = name;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Long getSubCategoryId() {
+        return subCategoryId;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setSubCategoryId(Long subCategoryId) {
+        this.subCategoryId = subCategoryId;
     }
 }

@@ -3,16 +3,16 @@ package com.integrators.dto;
 public class BrandDTO {
 	private Long id;
 	private String name;
-	private Long categoryId;
+	private Long subCategoryId;
 
 	// Constructors
 	public BrandDTO() {
 	}
 
-	public BrandDTO(Long id, String name, Long categoryId) {
+	public BrandDTO(Long id, String name, Long subCategoryId) {
 		this.id = id;
 		this.name = name;
-		this.categoryId = categoryId;
+		this.subCategoryId = subCategoryId;
 	}
 
 	// Getters and Setters
@@ -32,12 +32,12 @@ public class BrandDTO {
 		this.name = name;
 	}
 
-	public Long getCategoryId() {
-		return categoryId;
+	public Long getSubCategoryId() {
+		return subCategoryId;
 	}
 
-	public void setCategoryId(Long categoryId) {
-		this.categoryId = categoryId;
+	public void setSubCategoryId(Long subCategoryId) {
+		this.subCategoryId = subCategoryId;
 	}
 
 }

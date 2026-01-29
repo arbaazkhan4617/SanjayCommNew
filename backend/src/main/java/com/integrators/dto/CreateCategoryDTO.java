@@ -1,14 +1,14 @@
 package com.integrators.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class CreateCategoryDTO {
     @NotBlank(message = "Category name is required")
     private String name;
     
-    @NotNull(message = "Service ID is required")
-    private Long serviceId;
+    private String icon;
+    
+    private String description;
 
     public CreateCategoryDTO() {
     }
@@ -21,11 +21,19 @@ public class CreateCategoryDTO {
         this.name = name;
     }
 
-    public Long getServiceId() {
-        return serviceId;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setServiceId(Long serviceId) {
-        this.serviceId = serviceId;
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

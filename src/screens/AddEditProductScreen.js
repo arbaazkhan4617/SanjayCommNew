@@ -8,9 +8,11 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { launchImageLibrary } from 'react-native-image-picker';
 import Header from '../components/Header';
 import { COLORS } from '../utils/constants';
 import { adminAPI, productAPI } from '../services/api';
@@ -23,10 +25,11 @@ const AddEditProductScreen = () => {
   const isEdit = mode === 'edit' && product;
 
   const [loading, setLoading] = useState(false);
-  const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null); // 'category', 'subCategory', 'brand', 'model', or null
 
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -37,34 +40,36 @@ const AddEditProductScreen = () => {
     rating: product?.rating?.toString() || '',
     reviews: product?.reviews?.toString() || '',
     image: product?.image || '',
-    serviceId: product?.service?.id || null,
+    imageUrls: product?.images || [],
     categoryId: product?.category?.id || null,
+    subCategoryId: product?.subCategory?.id || null,
     brandId: product?.brand?.id || null,
     modelId: product?.model?.id || null,
     specifications: product?.specifications || {},
   });
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const [specKey, setSpecKey] = useState('');
   const [specValue, setSpecValue] = useState('');
 
   useEffect(() => {
-    loadServices();
+    loadCategories();
     if (isEdit) {
       loadHierarchy();
     }
   }, []);
 
   useEffect(() => {
-    if (formData.serviceId) {
-      loadCategories();
-    }
-  }, [formData.serviceId]);
-
-  useEffect(() => {
     if (formData.categoryId) {
-      loadBrands();
+      loadSubCategories();
     }
   }, [formData.categoryId]);
+
+  useEffect(() => {
+    if (formData.subCategoryId) {
+      loadBrands();
+    }
+  }, [formData.subCategoryId]);
 
   useEffect(() => {
     if (formData.brandId) {
@@ -72,24 +77,24 @@ const AddEditProductScreen = () => {
     }
   }, [formData.brandId]);
 
-  const loadServices = async () => {
+  const loadCategories = async () => {
     try {
-      const response = await productAPI.getServices();
-      setServices(response.data || []);
+      const response = await productAPI.getCategories();
+      setCategories(response.data || []);
     } catch (error) {
-      console.error('Error loading services:', error);
+      console.error('Error loading categories:', error);
     }
   };
 
   const loadHierarchy = async () => {
-    if (product?.service?.id) {
+    if (product?.category?.id) {
       try {
-        const [categoriesRes, brandsRes, modelsRes] = await Promise.all([
-          productAPI.getCategoriesByService(product.service.id),
-          product.category?.id ? productAPI.getBrandsByCategory(product.category.id) : Promise.resolve({ data: [] }),
+        const [subCategoriesRes, brandsRes, modelsRes] = await Promise.all([
+          productAPI.getSubCategoriesByCategory(product.category.id),
+          product.subCategory?.id ? productAPI.getBrandsBySubCategory(product.subCategory.id) : Promise.resolve({ data: [] }),
           product.brand?.id ? productAPI.getModelsByBrand(product.brand.id) : Promise.resolve({ data: [] }),
         ]);
-        setCategories(categoriesRes.data || []);
+        setSubCategories(subCategoriesRes.data || []);
         setBrands(brandsRes.data || []);
         setModels(modelsRes.data || []);
       } catch (error) {
@@ -98,20 +103,20 @@ const AddEditProductScreen = () => {
     }
   };
 
-  const loadCategories = async () => {
-    if (!formData.serviceId) return;
+  const loadSubCategories = async () => {
+    if (!formData.categoryId) return;
     try {
-      const response = await productAPI.getCategoriesByService(formData.serviceId);
-      setCategories(response.data || []);
+      const response = await productAPI.getSubCategoriesByCategory(formData.categoryId);
+      setSubCategories(response.data || []);
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('Error loading sub categories:', error);
     }
   };
 
   const loadBrands = async () => {
-    if (!formData.categoryId) return;
+    if (!formData.subCategoryId) return;
     try {
-      const response = await productAPI.getBrandsByCategory(formData.categoryId);
+      const response = await productAPI.getBrandsBySubCategory(formData.subCategoryId);
       setBrands(response.data || []);
     } catch (error) {
       console.error('Error loading brands:', error);
@@ -132,18 +137,21 @@ const AddEditProductScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     
     // Reset dependent fields when parent changes
-    if (field === 'serviceId') {
-      setFormData((prev) => ({ ...prev, categoryId: null, brandId: null, modelId: null }));
-      setCategories([]);
+    if (field === 'categoryId') {
+      setFormData((prev) => ({ ...prev, subCategoryId: null, brandId: null, modelId: null }));
+      setSubCategories([]);
       setBrands([]);
       setModels([]);
-    } else if (field === 'categoryId') {
+      setOpenDropdown(null); // Close dropdown when parent changes
+    } else if (field === 'subCategoryId') {
       setFormData((prev) => ({ ...prev, brandId: null, modelId: null }));
       setBrands([]);
       setModels([]);
+      setOpenDropdown(null); // Close dropdown when parent changes
     } else if (field === 'brandId') {
       setFormData((prev) => ({ ...prev, modelId: null }));
       setModels([]);
+      setOpenDropdown(null); // Close dropdown when parent changes
     }
   };
 
@@ -165,6 +173,69 @@ const AddEditProductScreen = () => {
     const newSpecs = { ...formData.specifications };
     delete newSpecs[key];
     setFormData((prev) => ({ ...prev, specifications: newSpecs }));
+  };
+
+  const pickImages = () => {
+    const options = {
+      mediaType: 'photo',
+      quality: 0.8,
+      selectionLimit: 10, // Allow multiple images
+      includeBase64: false,
+    };
+
+    launchImageLibrary(options, async (response) => {
+      if (response.didCancel) {
+        return;
+      }
+
+      if (response.errorMessage) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: response.errorMessage,
+        });
+        return;
+      }
+
+      if (response.assets && response.assets.length > 0) {
+        try {
+          setUploadingImages(true);
+          const uploadPromises = response.assets.map((asset) =>
+            adminAPI.uploadImage(asset)
+          );
+          const results = await Promise.all(uploadPromises);
+          const uploadedUrls = results
+            .map((res) => res.data.imageUrl)
+            .filter((url) => url);
+
+          setFormData((prev) => ({
+            ...prev,
+            imageUrls: [...prev.imageUrls, ...uploadedUrls],
+          }));
+
+          Toast.show({
+            type: 'success',
+            text1: 'Success',
+            text2: `${uploadedUrls.length} image(s) uploaded successfully`,
+          });
+        } catch (error) {
+          console.error('Error uploading images:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Upload Error',
+            text2: error.response?.data?.error || 'Failed to upload images',
+          });
+        } finally {
+          setUploadingImages(false);
+        }
+      }
+    });
+  };
+
+  const removeImage = (index) => {
+    const newImageUrls = [...formData.imageUrls];
+    newImageUrls.splice(index, 1);
+    setFormData((prev) => ({ ...prev, imageUrls: newImageUrls }));
   };
 
   const handleSubmit = async () => {
@@ -189,7 +260,9 @@ const AddEditProductScreen = () => {
         reviews: formData.reviews ? parseInt(formData.reviews) : null,
         modelId: formData.modelId,
         image: formData.image,
+        imageUrls: formData.imageUrls,
         specifications: formData.specifications,
+        // Note: Backend will derive category/subCategory from model hierarchy
       };
 
       if (isEdit) {
@@ -222,7 +295,7 @@ const AddEditProductScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title={isEdit ? 'Edit Product' : 'Add Product'} />
+      <Header title={isEdit ? 'Edit Product' : 'Add Product'} showSearch={false} showCart={false} />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Basic Information</Text>
@@ -296,14 +369,40 @@ const AddEditProductScreen = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Image URL</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.image}
-              onChangeText={(value) => handleInputChange('image', value)}
-              placeholder="https://example.com/image.jpg"
-              keyboardType="url"
-            />
+            <Text style={styles.label}>Product Images</Text>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={pickImages}
+              disabled={uploadingImages}
+            >
+              {uploadingImages ? (
+                <ActivityIndicator color={COLORS.background} />
+              ) : (
+                <>
+                  <Ionicons name="camera" size={20} color={COLORS.background} />
+                  <Text style={styles.uploadButtonText}>Upload Images</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.uploadHint}>
+              You can upload multiple images (up to 10)
+            </Text>
+            
+            {formData.imageUrls.length > 0 && (
+              <View style={styles.imagesContainer}>
+                {formData.imageUrls.map((imageUrl, index) => (
+                  <View key={index} style={styles.imageItem}>
+                    <Image source={{ uri: imageUrl }} style={styles.thumbnail} />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Ionicons name="close-circle" size={24} color="#FF3B30" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -323,92 +422,140 @@ const AddEditProductScreen = () => {
           <Text style={styles.sectionTitle}>Product Hierarchy</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Service *</Text>
-            <View style={styles.pickerContainer}>
+            <Text style={styles.label}>Category *</Text>
+            <TouchableOpacity
+              style={styles.pickerContainer}
+              onPress={() => setOpenDropdown(openDropdown === 'category' ? null : 'category')}
+            >
               <Text style={styles.pickerText}>
-                {services.find((s) => s.id === formData.serviceId)?.name || 'Select Service'}
+                {categories.find((c) => c.id === formData.categoryId)?.name || 'Select Category'}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
-            </View>
-            <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
-              {services.map((service) => (
-                <TouchableOpacity
-                  key={service.id}
-                  style={styles.pickerOption}
-                  onPress={() => handleInputChange('serviceId', service.id)}
-                >
-                  <Text>{service.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {formData.serviceId && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Category *</Text>
-              <View style={styles.pickerContainer}>
-                <Text style={styles.pickerText}>
-                  {categories.find((c) => c.id === formData.categoryId)?.name || 'Select Category'}
-                </Text>
-                <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
-              </View>
+              <Ionicons 
+                name={openDropdown === 'category' ? 'chevron-up' : 'chevron-down'} 
+                size={20} 
+                color={COLORS.textLight} 
+              />
+            </TouchableOpacity>
+            {openDropdown === 'category' && (
               <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
                 {categories.map((category) => (
                   <TouchableOpacity
                     key={category.id}
                     style={styles.pickerOption}
-                    onPress={() => handleInputChange('categoryId', category.id)}
+                    onPress={() => {
+                      handleInputChange('categoryId', category.id);
+                      setOpenDropdown(null);
+                    }}
                   >
                     <Text>{category.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-            </View>
-          )}
+            )}
+          </View>
 
           {formData.categoryId && (
             <View style={styles.inputGroup}>
+              <Text style={styles.label}>Sub Category *</Text>
+              <TouchableOpacity
+                style={styles.pickerContainer}
+                onPress={() => setOpenDropdown(openDropdown === 'subCategory' ? null : 'subCategory')}
+              >
+                <Text style={styles.pickerText}>
+                  {subCategories.find((sc) => sc.id === formData.subCategoryId)?.name || 'Select Sub Category'}
+                </Text>
+                <Ionicons 
+                  name={openDropdown === 'subCategory' ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color={COLORS.textLight} 
+                />
+              </TouchableOpacity>
+              {openDropdown === 'subCategory' && (
+                <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
+                  {subCategories.map((subCategory) => (
+                    <TouchableOpacity
+                      key={subCategory.id}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        handleInputChange('subCategoryId', subCategory.id);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Text>{subCategory.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
+
+          {formData.subCategoryId && (
+            <View style={styles.inputGroup}>
               <Text style={styles.label}>Brand *</Text>
-              <View style={styles.pickerContainer}>
+              <TouchableOpacity
+                style={styles.pickerContainer}
+                onPress={() => setOpenDropdown(openDropdown === 'brand' ? null : 'brand')}
+              >
                 <Text style={styles.pickerText}>
                   {brands.find((b) => b.id === formData.brandId)?.name || 'Select Brand'}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
-              </View>
-              <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
-                {brands.map((brand) => (
-                  <TouchableOpacity
-                    key={brand.id}
-                    style={styles.pickerOption}
-                    onPress={() => handleInputChange('brandId', brand.id)}
-                  >
-                    <Text>{brand.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                <Ionicons 
+                  name={openDropdown === 'brand' ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color={COLORS.textLight} 
+                />
+              </TouchableOpacity>
+              {openDropdown === 'brand' && (
+                <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
+                  {brands.map((brand) => (
+                    <TouchableOpacity
+                      key={brand.id}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        handleInputChange('brandId', brand.id);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Text>{brand.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           )}
 
           {formData.brandId && (
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Model *</Text>
-              <View style={styles.pickerContainer}>
+              <TouchableOpacity
+                style={styles.pickerContainer}
+                onPress={() => setOpenDropdown(openDropdown === 'model' ? null : 'model')}
+              >
                 <Text style={styles.pickerText}>
                   {models.find((m) => m.id === formData.modelId)?.name || 'Select Model'}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color={COLORS.textLight} />
-              </View>
-              <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
-                {models.map((model) => (
-                  <TouchableOpacity
-                    key={model.id}
-                    style={styles.pickerOption}
-                    onPress={() => handleInputChange('modelId', model.id)}
-                  >
-                    <Text>{model.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                <Ionicons 
+                  name={openDropdown === 'model' ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color={COLORS.textLight} 
+                />
+              </TouchableOpacity>
+              {openDropdown === 'model' && (
+                <ScrollView style={styles.pickerOptions} nestedScrollEnabled>
+                  {models.map((model) => (
+                    <TouchableOpacity
+                      key={model.id}
+                      style={styles.pickerOption}
+                      onPress={() => {
+                        handleInputChange('modelId', model.id);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      <Text>{model.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           )}
         </View>
@@ -609,6 +756,55 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  uploadButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 8,
+    gap: 8,
+  },
+  uploadButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  uploadHint: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  imagesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 12,
+  },
+  imageItem: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
   },
 });
 

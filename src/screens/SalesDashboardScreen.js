@@ -45,20 +45,55 @@ const SalesDashboardScreen = () => {
       await AsyncStorage.removeItem('salesUser');
       setSalesUser(null); // Clear local state
       
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out',
+        text2: 'Redirecting to login...',
+      });
+      
       // Get the root navigator by traversing up the navigation tree
       let rootNavigator = navigation;
       while (rootNavigator.getParent && rootNavigator.getParent()) {
         rootNavigator = rootNavigator.getParent();
       }
       
-      // Reset the root navigator to SalesLogin
-      // This will trigger AppNavigator's onStateChange which will re-check salesUser
-      rootNavigator.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'SalesLogin' }],
-        })
-      );
+      // Force a state check by triggering a navigation action
+      rootNavigator.dispatch((state) => {
+        return CommonActions.navigate({
+          name: state.routes[state.index].name,
+          params: state.routes[state.index].params,
+        });
+      });
+      
+      // Wait for React to re-render with updated navigation structure
+      // Then navigate to Login (regular user login screen)
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          try {
+            rootNavigator.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              })
+            );
+          } catch (navError) {
+            console.log('Navigation error, retrying...', navError);
+            // Retry after another frame
+            setTimeout(() => {
+              try {
+                rootNavigator.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  })
+                );
+              } catch (e) {
+                console.log('Navigation will update automatically');
+              }
+            }, 200);
+          }
+        });
+      }, 100);
     } catch (error) {
       console.error('Error logging out:', error);
       Toast.show({

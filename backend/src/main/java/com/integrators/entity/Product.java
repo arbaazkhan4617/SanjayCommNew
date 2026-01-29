@@ -1,8 +1,11 @@
 package com.integrators.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -13,7 +16,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 @Entity
 @Table(name = "products")
@@ -50,6 +55,10 @@ public class Product {
 	@MapKeyColumn(name = "spec_key")
 	@Column(name = "spec_value")
 	private Map<String, String> specifications;
+
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	@OrderBy("displayOrder ASC")
+	private List<ProductImage> images = new ArrayList<>();
 
 	public Long getId() {
 		return id;
@@ -129,6 +138,14 @@ public class Product {
 
 	public void setSpecifications(Map<String, String> specifications) {
 		this.specifications = specifications;
+	}
+
+	public List<ProductImage> getImages() {
+		return images;
+	}
+
+	public void setImages(List<ProductImage> images) {
+		this.images = images;
 	}
 
 	// Constructors

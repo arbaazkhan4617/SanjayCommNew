@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,7 @@ const AdminDashboardScreen = () => {
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalCategories: 0,
+    totalSubCategories: 0,
     totalBrands: 0,
     totalModels: 0,
   });
@@ -48,9 +50,10 @@ const AdminDashboardScreen = () => {
   const loadStats = async () => {
     try {
       setLoading(true);
-      const [productsRes, categoriesRes, brandsRes, modelsRes] = await Promise.all([
+      const [productsRes, categoriesRes, subCategoriesRes, brandsRes, modelsRes] = await Promise.all([
         adminAPI.getAllProducts(),
         adminAPI.getAllCategories(),
+        adminAPI.getAllSubCategories(),
         adminAPI.getAllBrands(),
         adminAPI.getAllModels(),
       ]);
@@ -58,6 +61,7 @@ const AdminDashboardScreen = () => {
       setStats({
         totalProducts: productsRes.data?.length || 0,
         totalCategories: categoriesRes.data?.length || 0,
+        totalSubCategories: subCategoriesRes.data?.length || 0,
         totalBrands: brandsRes.data?.length || 0,
         totalModels: modelsRes.data?.length || 0,
       });
@@ -81,22 +85,60 @@ const AdminDashboardScreen = () => {
 
   const handleLogout = async () => {
     try {
+      // Clear admin user from storage
       await AsyncStorage.removeItem('adminUser');
       
-      // Get the root navigator by traversing up the navigation tree
+      Toast.show({
+        type: 'success',
+        text1: 'Logged Out',
+        text2: 'Redirecting to login...',
+      });
+      
+      // Get the root navigator
       let rootNavigator = navigation;
       while (rootNavigator.getParent && rootNavigator.getParent()) {
         rootNavigator = rootNavigator.getParent();
       }
       
-      // Reset the root navigator to AdminLogin
-      // This will trigger AppNavigator's onStateChange which will re-check adminUser
-      rootNavigator.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'AdminLogin' }],
-        })
-      );
+      // Force a state check by triggering a navigation action
+      // This will cause onStateChange to fire, which will check adminUser
+      // and update the navigation structure
+      rootNavigator.dispatch((state) => {
+        return CommonActions.navigate({
+          name: state.routes[state.index].name,
+          params: state.routes[state.index].params,
+        });
+      });
+      
+      // Wait for React to re-render with updated navigation structure
+      // Then navigate to Login (regular user login screen)
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          try {
+            rootNavigator.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              })
+            );
+          } catch (navError) {
+            console.log('Navigation error, retrying...', navError);
+            // Retry after another frame
+            setTimeout(() => {
+              try {
+                rootNavigator.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  })
+                );
+              } catch (e) {
+                console.log('Navigation will update automatically');
+              }
+            }, 200);
+          }
+        });
+      }, 100);
     } catch (error) {
       console.error('Error logging out:', error);
       Toast.show({
@@ -109,18 +151,18 @@ const AdminDashboardScreen = () => {
 
   if (loading && !stats.totalProducts) {
     return (
-      <View style={styles.container}>
-        <Header title="Admin Dashboard" />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Header title="Admin Dashboard" showSearch={false} showCart={false} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Header title="Admin Dashboard" />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Header title="Admin Dashboard" showSearch={false} showCart={false} />
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -153,11 +195,6 @@ const AdminDashboardScreen = () => {
             <Text style={styles.statNumber}>{stats.totalBrands}</Text>
             <Text style={styles.statLabel}>Brands</Text>
           </View>
-          <View style={styles.statCard}>
-            <Ionicons name="layers-outline" size={32} color={COLORS.primary} />
-            <Text style={styles.statNumber}>{stats.totalModels}</Text>
-            <Text style={styles.statLabel}>Models</Text>
-          </View>
         </View>
 
         <View style={styles.actionsContainer}>
@@ -179,28 +216,28 @@ const AdminDashboardScreen = () => {
 
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => navigation.navigate('AddEditProduct', { mode: 'add' })}
+            onPress={() => navigation.navigate('CategoryManagement')}
           >
-            <View style={[styles.actionIconContainer, { backgroundColor: COLORS.primary + '20' }]}>
-              <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="folder" size={24} color={COLORS.primary} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Add New Product</Text>
-              <Text style={styles.actionSubtitle}>Create a new product entry</Text>
+              <Text style={styles.actionTitle}>Manage Categories</Text>
+              <Text style={styles.actionSubtitle}>CCTV, Networking, Access Controls, etc.</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => navigation.navigate('CategoryManagement')}
+            onPress={() => navigation.navigate('SubCategoryManagement')}
           >
             <View style={styles.actionIconContainer}>
               <Ionicons name="grid" size={24} color={COLORS.primary} />
             </View>
             <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Manage Categories</Text>
-              <Text style={styles.actionSubtitle}>Organize product categories</Text>
+              <Text style={styles.actionTitle}>Manage Sub Categories</Text>
+              <Text style={styles.actionSubtitle}>IP Cameras, Analog Cameras, etc.</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
           </TouchableOpacity>
@@ -220,7 +257,7 @@ const AdminDashboardScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -265,7 +302,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: '30%',
     backgroundColor: COLORS.background,
     borderRadius: 12,
     padding: 16,

@@ -7,8 +7,8 @@ public class CreateServiceRequestDTO {
     @NotNull(message = "User ID is required")
     private Long userId;
 
-    private Long serviceId;
     private Long categoryId;
+    private Long subCategoryId;
 
     @NotBlank(message = "Subject is required")
     private String subject;
@@ -30,20 +30,20 @@ public class CreateServiceRequestDTO {
         this.userId = userId;
     }
 
-    public Long getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(Long serviceId) {
-        this.serviceId = serviceId;
-    }
-
     public Long getCategoryId() {
         return categoryId;
     }
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Long getSubCategoryId() {
+        return subCategoryId;
+    }
+
+    public void setSubCategoryId(Long subCategoryId) {
+        this.subCategoryId = subCategoryId;
     }
 
     public String getSubject() {

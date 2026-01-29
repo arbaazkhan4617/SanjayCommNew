@@ -6,12 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
 import ProductsScreen from './src/screens/ProductsScreen';
 import CategoriesScreen from './src/screens/CategoriesScreen';
-import ProductCategoriesScreen from './src/screens/ProductCategoriesScreen';
+import SubCategoriesScreen from './src/screens/SubCategoriesScreen';
 import BrandsScreen from './src/screens/BrandsScreen';
 import ModelsScreen from './src/screens/ModelsScreen';
 import ProductDetailScreen from './src/screens/ProductDetailScreen';
@@ -36,6 +37,9 @@ import AdminLoginScreen from './src/screens/AdminLoginScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import ProductManagementScreen from './src/screens/ProductManagementScreen';
 import AddEditProductScreen from './src/screens/AddEditProductScreen';
+import CategoryManagementScreen from './src/screens/CategoryManagementScreen';
+import SubCategoryManagementScreen from './src/screens/SubCategoryManagementScreen';
+import BrandManagementScreen from './src/screens/BrandManagementScreen';
 
 // Context
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -52,7 +56,7 @@ function HomeStack() {
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
-      <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
+      <Stack.Screen name="SubCategories" component={SubCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
@@ -71,7 +75,7 @@ function ProductsStack() {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
-      <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
+      <Stack.Screen name="SubCategories" component={SubCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
@@ -90,7 +94,7 @@ function CartStack() {
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
-      <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
+      <Stack.Screen name="SubCategories" component={SubCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
@@ -113,7 +117,7 @@ function ProfileStack() {
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
-      <Stack.Screen name="ProductCategories" component={ProductCategoriesScreen} />
+      <Stack.Screen name="SubCategories" component={SubCategoriesScreen} />
       <Stack.Screen name="Brands" component={BrandsScreen} />
       <Stack.Screen name="Models" component={ModelsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
@@ -122,28 +126,37 @@ function ProfileStack() {
 }
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
+      screenOptions={({ route }) => {
+        return {
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
 
-          if (route.name === 'HomeTab') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'ProductsTab') {
-            iconName = focused ? 'grid' : 'grid-outline';
-          } else if (route.name === 'CartTab') {
-            iconName = focused ? 'cart' : 'cart-outline';
-          } else if (route.name === 'ProfileTab') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
+            if (route.name === 'HomeTab') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'ProductsTab') {
+              iconName = focused ? 'grid' : 'grid-outline';
+            } else if (route.name === 'CartTab') {
+              iconName = focused ? 'cart' : 'cart-outline';
+            } else if (route.name === 'ProfileTab') {
+              iconName = focused ? 'person' : 'person-outline';
+            }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#FF6B35',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#FF6B35',
+          tabBarInactiveTintColor: 'gray',
+          headerShown: false,
+          tabBarStyle: {
+            paddingBottom: Math.max(insets.bottom, 8),
+            height: 60 + Math.max(insets.bottom, 8),
+            paddingTop: 8,
+          },
+        };
+      }}
     >
       <Tab.Screen 
         name="HomeTab" 
@@ -187,6 +200,9 @@ function AdminStack() {
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <Stack.Screen name="ProductManagement" component={ProductManagementScreen} />
       <Stack.Screen name="AddEditProduct" component={AddEditProductScreen} />
+      <Stack.Screen name="CategoryManagement" component={CategoryManagementScreen} />
+      <Stack.Screen name="SubCategoryManagement" component={SubCategoryManagementScreen} />
+      <Stack.Screen name="BrandManagement" component={BrandManagementScreen} />
     </Stack.Navigator>
   );
 }
@@ -214,6 +230,19 @@ function AppNavigator() {
     }, 500);
     return () => clearTimeout(timer);
   }, [user]);
+
+  // Listen for focus events to re-check admin user (for logout scenarios)
+  useEffect(() => {
+    const unsubscribe = navigationRef.current?.addListener?.('state', async () => {
+      await checkAdminUser();
+      await checkSalesUser();
+    });
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
 
   const checkSalesUser = async () => {
     try {
@@ -301,12 +330,14 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <AppNavigator />
-        <StatusBar style="auto" />
-        <Toast />
-      </CartProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <CartProvider>
+          <AppNavigator />
+          <StatusBar style="auto" />
+          <Toast />
+        </CartProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

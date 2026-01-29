@@ -1,6 +1,8 @@
 package com.integrators.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.constraints.NotBlank;
@@ -30,7 +32,8 @@ public class CreateProductDTO {
     
     private Map<String, String> specifications;
     
-    private String image; // Image URL for the product/model
+    private String image; // Image URL for the product/model (backward compatibility)
+    private List<String> imageUrls; // Multiple image URLs for the product
 
     public CreateProductDTO() {
     }
@@ -113,5 +116,13 @@ public class CreateProductDTO {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls != null ? imageUrls : new ArrayList<>();
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 }

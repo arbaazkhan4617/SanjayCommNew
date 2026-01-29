@@ -7,53 +7,53 @@ import org.springframework.stereotype.Service;
 
 import com.integrators.dto.BrandDTO;
 import com.integrators.dto.ModelDTO;
-import com.integrators.dto.ProductCategoryDTO;
+import com.integrators.dto.SubCategoryDTO;
 import com.integrators.dto.ProductResponseDTO;
-import com.integrators.dto.ServiceDTO;
+import com.integrators.dto.CategoryDTO;
 import com.integrators.entity.Brand;
 import com.integrators.entity.Model;
 import com.integrators.entity.Product;
-import com.integrators.entity.ProductCategory;
+import com.integrators.entity.SubCategory;
 import com.integrators.repository.BrandRepository;
 import com.integrators.repository.ModelRepository;
-import com.integrators.repository.ProductCategoryRepository;
+import com.integrators.repository.SubCategoryRepository;
 import com.integrators.repository.ProductRepository;
-import com.integrators.repository.ServiceRepository;
+import com.integrators.repository.CategoryRepository;
 
 @Service
 public class ProductService {
-	private final ServiceRepository serviceRepository;
-	private final ProductCategoryRepository categoryRepository;
+	private final CategoryRepository categoryRepository;
+	private final SubCategoryRepository subCategoryRepository;
 	private final BrandRepository brandRepository;
 	private final ModelRepository modelRepository;
 	private final ProductRepository productRepository;
 
-	public ProductService(ServiceRepository serviceRepository, ProductCategoryRepository categoryRepository,
+	public ProductService(CategoryRepository categoryRepository, SubCategoryRepository subCategoryRepository,
 			BrandRepository brandRepository, ModelRepository modelRepository, ProductRepository productRepository) {
 		super();
-		this.serviceRepository = serviceRepository;
 		this.categoryRepository = categoryRepository;
+		this.subCategoryRepository = subCategoryRepository;
 		this.brandRepository = brandRepository;
 		this.modelRepository = modelRepository;
 		this.productRepository = productRepository;
 	}
 
-	public List<ServiceDTO> getAllServices() {
-		return serviceRepository.findAll().stream().map(this::convertToServiceDTO).collect(Collectors.toList());
+	public List<CategoryDTO> getAllCategories() {
+		return categoryRepository.findAll().stream().map(this::convertToCategoryDTO).collect(Collectors.toList());
 	}
 
-	public ServiceDTO getServiceById(Long id) {
-		return serviceRepository.findById(id).map(this::convertToServiceDTO)
-				.orElseThrow(() -> new RuntimeException("Service not found"));
+	public CategoryDTO getCategoryById(Long id) {
+		return categoryRepository.findById(id).map(this::convertToCategoryDTO)
+				.orElseThrow(() -> new RuntimeException("Category not found"));
 	}
 
-	public List<ProductCategoryDTO> getCategoriesByServiceId(Long serviceId) {
-		return categoryRepository.findByServiceId(serviceId).stream().map(this::convertToCategoryDTO)
+	public List<SubCategoryDTO> getSubCategoriesByCategoryId(Long categoryId) {
+		return subCategoryRepository.findByCategoryId(categoryId).stream().map(this::convertToSubCategoryDTO)
 				.collect(Collectors.toList());
 	}
 
-	public List<BrandDTO> getBrandsByCategoryId(Long categoryId) {
-		return brandRepository.findByCategoryId(categoryId).stream().map(this::convertToBrandDTO)
+	public List<BrandDTO> getBrandsBySubCategoryId(Long subCategoryId) {
+		return brandRepository.findBySubCategoryId(subCategoryId).stream().map(this::convertToBrandDTO)
 				.collect(Collectors.toList());
 	}
 
@@ -78,16 +78,16 @@ public class ProductService {
 	}
 
 	// Conversion methods
-	public ServiceDTO convertToServiceDTO(com.integrators.entity.Service service) {
-		return new ServiceDTO(service.getId(), service.getName(), service.getIcon(), service.getDescription());
+	public CategoryDTO convertToCategoryDTO(com.integrators.entity.Category category) {
+		return new CategoryDTO(category.getId(), category.getName(), category.getIcon(), category.getDescription());
 	}
 
-	public ProductCategoryDTO convertToCategoryDTO(ProductCategory category) {
-		return new ProductCategoryDTO(category.getId(), category.getName(), category.getService().getId());
+	public SubCategoryDTO convertToSubCategoryDTO(SubCategory subCategory) {
+		return new SubCategoryDTO(subCategory.getId(), subCategory.getName(), subCategory.getCategory().getId());
 	}
 
 	public BrandDTO convertToBrandDTO(Brand brand) {
-		return new BrandDTO(brand.getId(), brand.getName(), brand.getCategory().getId());
+		return new BrandDTO(brand.getId(), brand.getName(), brand.getSubCategory().getId());
 	}
 
 	public ModelDTO convertToModelDTO(Model model) {
@@ -106,22 +106,37 @@ public class ProductService {
 		dto.setReviews(product.getReviews());
 		dto.setSpecifications(product.getSpecifications());
 
+		// Set product images
+		if (product.getImages() != null && !product.getImages().isEmpty()) {
+			List<String> imageUrls = product.getImages().stream()
+					.map(img -> img.getImageUrl())
+					.collect(java.util.stream.Collectors.toList());
+			dto.setImages(imageUrls);
+			// Set first image as primary image for backward compatibility
+			if (!imageUrls.isEmpty()) {
+				dto.setImage(imageUrls.get(0));
+			}
+		}
+
 		Model model = product.getModel();
 		if (model != null) {
-			dto.setImage(model.getImage());
+			// Only set model image if no product images exist
+			if (dto.getImage() == null || dto.getImage().isEmpty()) {
+				dto.setImage(model.getImage());
+			}
 			dto.setModel(new ProductResponseDTO.ModelInfoDTO(model.getId(), model.getName()));
 
 			Brand brand = model.getBrand();
 			if (brand != null) {
 				dto.setBrand(new ProductResponseDTO.BrandInfoDTO(brand.getId(), brand.getName()));
 
-				ProductCategory category = brand.getCategory();
-				if (category != null) {
-					dto.setCategory(new ProductResponseDTO.CategoryInfoDTO(category.getId(), category.getName()));
+				SubCategory subCategory = brand.getSubCategory();
+				if (subCategory != null) {
+					dto.setSubCategory(new ProductResponseDTO.SubCategoryInfoDTO(subCategory.getId(), subCategory.getName()));
 
-					com.integrators.entity.Service service = category.getService();
-					if (service != null) {
-						dto.setService(new ProductResponseDTO.ServiceInfoDTO(service.getId(), service.getName()));
+					com.integrators.entity.Category category = subCategory.getCategory();
+					if (category != null) {
+						dto.setCategory(new ProductResponseDTO.CategoryInfoDTO(category.getId(), category.getName()));
 					}
 				}
 			}

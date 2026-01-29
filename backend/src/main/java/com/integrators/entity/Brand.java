@@ -24,8 +24,8 @@ public class Brand {
 	private String name;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "category_id", nullable = false)
-	private ProductCategory category;
+	@JoinColumn(name = "sub_category_id", nullable = false)
+	private SubCategory subCategory;
 
 	@OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Model> models;
@@ -46,12 +46,12 @@ public class Brand {
 		this.name = name;
 	}
 
-	public ProductCategory getCategory() {
-		return category;
+	public SubCategory getSubCategory() {
+		return subCategory;
 	}
 
-	public void setCategory(ProductCategory category) {
-		this.category = category;
+	public void setSubCategory(SubCategory subCategory) {
+		this.subCategory = subCategory;
 	}
 
 	public List<Model> getModels() {
@@ -66,10 +66,10 @@ public class Brand {
 	public Brand() {
 	}
 
-	public Brand(Long id, String name, ProductCategory category, List<Model> models) {
+	public Brand(Long id, String name, SubCategory subCategory, List<Model> models) {
 		this.id = id;
 		this.name = name;
-		this.category = category;
+		this.subCategory = subCategory;
 		this.models = models;
 	}
 

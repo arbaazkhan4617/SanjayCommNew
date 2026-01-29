@@ -9,26 +9,25 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 @Entity
-@Table(name = "product_categories")
-public class ProductCategory {
+@Table(name = "categories")
+public class Category {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String name;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "service_id", nullable = false)
-	private Service service;
+	private String icon;
+
+	@Column(length = 500)
+	private String description;
 
 	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<Brand> brands;
+	private List<SubCategory> subCategories;
 
 	public Long getId() {
 		return id;
@@ -46,31 +45,40 @@ public class ProductCategory {
 		this.name = name;
 	}
 
-	public Service getService() {
-		return service;
+	public String getIcon() {
+		return icon;
 	}
 
-	public void setService(Service service) {
-		this.service = service;
+	public void setIcon(String icon) {
+		this.icon = icon;
 	}
 
-	public List<Brand> getBrands() {
-		return brands;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setBrands(List<Brand> brands) {
-		this.brands = brands;
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public List<SubCategory> getSubCategories() {
+		return subCategories;
+	}
+
+	public void setSubCategories(List<SubCategory> subCategories) {
+		this.subCategories = subCategories;
 	}
 
 	// Constructors
-	public ProductCategory() {
+	public Category() {
 	}
 
-	public ProductCategory(Long id, String name, Service service, List<Brand> brands) {
+	public Category(Long id, String name, String icon, String description, List<SubCategory> subCategories) {
 		this.id = id;
 		this.name = name;
-		this.service = service;
-		this.brands = brands;
+		this.icon = icon;
+		this.description = description;
+		this.subCategories = subCategories;
 	}
 
 }

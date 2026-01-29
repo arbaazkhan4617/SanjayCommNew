@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
@@ -22,6 +24,8 @@ const ProductManagementScreen = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   useEffect(() => {
     loadProducts();
@@ -45,34 +49,44 @@ const ProductManagementScreen = () => {
   };
 
   const handleDelete = (product) => {
-    Alert.alert(
-      'Delete Product',
-      `Are you sure you want to delete "${product.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await adminAPI.deleteProduct(product.id);
-              Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Product deleted successfully',
-              });
-              loadProducts();
-            } catch (error) {
-              Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'Failed to delete product',
-              });
-            }
-          },
-        },
-      ]
-    );
+    console.log('handleDelete called for product:', product);
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    
+    console.log('Delete confirmed, calling API for product ID:', productToDelete.id);
+    try {
+      setLoading(true);
+      setShowDeleteModal(false);
+      await adminAPI.deleteProduct(productToDelete.id);
+      console.log('Product deleted successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Product deleted successfully',
+      });
+      await loadProducts();
+      setProductToDelete(null);
+    } catch (error) {
+      console.error('Delete product error:', error);
+      console.error('Error response:', error.response);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to delete product',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    console.log('Delete cancelled');
+    setShowDeleteModal(false);
+    setProductToDelete(null);
   };
 
   const filteredProducts = products.filter((product) =>
@@ -80,49 +94,59 @@ const ProductManagementScreen = () => {
   );
 
   const renderProduct = ({ item }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => navigation.navigate('AddEditProduct', { product: item, mode: 'edit' })}
-    >
-      <Image
-        source={{ uri: item.image || 'https://via.placeholder.com/100' }}
-        style={styles.productImage}
-      />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.name}
-        </Text>
-        <Text style={styles.productPrice}>₹{parseFloat(item.price || 0).toFixed(2)}</Text>
-        <View style={styles.productMeta}>
-          <Text style={styles.productCategory}>
-            {item.category?.name || 'N/A'} • {item.brand?.name || 'N/A'}
+    <View style={styles.productCard}>
+      <TouchableOpacity
+        style={styles.productContent}
+        onPress={() => navigation.navigate('AddEditProduct', { product: item, mode: 'edit' })}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={{ uri: item.image || 'https://via.placeholder.com/100' }}
+          style={styles.productImage}
+        />
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.name}
           </Text>
-          <View style={[styles.stockBadge, item.inStock ? styles.inStock : styles.outOfStock]}>
-            <Text style={styles.stockText}>{item.inStock ? 'In Stock' : 'Out of Stock'}</Text>
+          <Text style={styles.productPrice}>₹{parseFloat(item.price || 0).toFixed(2)}</Text>
+          <View style={styles.productMeta}>
+            <Text style={styles.productCategory}>
+              {item.category?.name || 'N/A'} • {item.brand?.name || 'N/A'}
+            </Text>
+            <View style={[styles.stockBadge, item.inStock ? styles.inStock : styles.outOfStock]}>
+              <Text style={styles.stockText}>{item.inStock ? 'In Stock' : 'Out of Stock'}</Text>
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.editButton}
           onPress={() => navigation.navigate('AddEditProduct', { product: item, mode: 'edit' })}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="create-outline" size={20} color={COLORS.primary} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => handleDelete(item)}
+          onPress={() => {
+            console.log('Delete button pressed for:', item.name, 'Product ID:', item.id);
+            handleDelete(item);
+          }}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="trash-outline" size={20} color="#FF3B30" />
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header title="Product Management" />
+        <Header title="Product Management" showSearch={false} showCart={false} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -132,7 +156,7 @@ const ProductManagementScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Product Management" />
+      <Header title="Product Management" showSearch={false} showCart={false} />
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
         <TextInput
@@ -178,6 +202,42 @@ const ProductManagementScreen = () => {
           </View>
         }
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Text style={styles.deleteModalTitle}>Delete Product</Text>
+            <Text style={styles.deleteModalMessage}>
+              Are you sure you want to delete "{productToDelete?.name || 'this product'}"?
+            </Text>
+            <Text style={styles.deleteModalWarning}>
+              This action cannot be undone.
+            </Text>
+            <View style={styles.deleteModalActions}>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.cancelDeleteButton]}
+                onPress={cancelDelete}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelDeleteButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.confirmDeleteButton]}
+                onPress={confirmDelete}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -248,6 +308,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  productContent: {
+    flexDirection: 'row',
+    flex: 1,
+    paddingRight: 70,
   },
   productImage: {
     width: 80,
@@ -275,6 +341,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginRight: 8,
   },
   productCategory: {
     fontSize: 12,
@@ -298,13 +365,17 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   actions: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -12 }],
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginLeft: 8,
   },
   editButton: {
     padding: 8,
+    marginLeft: 8,
   },
   deleteButton: {
     padding: 8,
@@ -328,6 +399,65 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: COLORS.background,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalContent: {
+    backgroundColor: COLORS.background,
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  deleteModalMessage: {
+    fontSize: 16,
+    color: COLORS.text,
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  deleteModalWarning: {
+    fontSize: 14,
+    color: '#FF3B30',
+    marginBottom: 24,
+    fontWeight: '600',
+  },
+  deleteModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  deleteModalButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  cancelDeleteButton: {
+    backgroundColor: COLORS.border,
+  },
+  cancelDeleteButtonText: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmDeleteButton: {
+    backgroundColor: '#FF3B30',
+  },
+  confirmDeleteButtonText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

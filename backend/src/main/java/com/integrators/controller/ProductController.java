@@ -17,24 +17,24 @@ public class ProductController {
     	this.productService = productService;
     }
     
-    @GetMapping("/services")
-    public ResponseEntity<List<ServiceDTO>> getAllServices() {
-        return ResponseEntity.ok(productService.getAllServices());
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
+        return ResponseEntity.ok(productService.getAllCategories());
     }
 
-    @GetMapping("/services/{id}")
-    public ResponseEntity<ServiceDTO> getServiceById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getServiceById(id));
+    @GetMapping("/categories/{id}")
+    public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getCategoryById(id));
     }
 
-    @GetMapping("/services/{serviceId}/categories")
-    public ResponseEntity<List<ProductCategoryDTO>> getCategoriesByService(@PathVariable Long serviceId) {
-        return ResponseEntity.ok(productService.getCategoriesByServiceId(serviceId));
+    @GetMapping("/categories/{categoryId}/sub-categories")
+    public ResponseEntity<List<SubCategoryDTO>> getSubCategoriesByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(productService.getSubCategoriesByCategoryId(categoryId));
     }
 
-    @GetMapping("/categories/{categoryId}/brands")
-    public ResponseEntity<List<BrandDTO>> getBrandsByCategory(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(productService.getBrandsByCategoryId(categoryId));
+    @GetMapping("/sub-categories/{subCategoryId}/brands")
+    public ResponseEntity<List<BrandDTO>> getBrandsBySubCategory(@PathVariable Long subCategoryId) {
+        return ResponseEntity.ok(productService.getBrandsBySubCategoryId(subCategoryId));
     }
 
     @GetMapping("/brands/{brandId}/models")

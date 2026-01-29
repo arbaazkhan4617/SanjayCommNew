@@ -18,8 +18,8 @@ const ModelsScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const brand = route.params?.brand;
+  const subCategory = route.params?.subCategory;
   const category = route.params?.category;
-  const service = route.params?.service;
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState({});

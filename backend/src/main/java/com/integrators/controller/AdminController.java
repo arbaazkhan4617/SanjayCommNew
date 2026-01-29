@@ -2,10 +2,13 @@ package com.integrators.controller;
 
 import com.integrators.dto.*;
 import com.integrators.service.AdminService;
+import com.integrators.service.FileUploadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +18,11 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class AdminController {
     private final AdminService adminService;
+    private final FileUploadService fileUploadService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, FileUploadService fileUploadService) {
         this.adminService = adminService;
+        this.fileUploadService = fileUploadService;
     }
 
     // Product Management
@@ -183,11 +188,60 @@ public class AdminController {
         }
     }
 
+    // SubCategory Management
+    @PostMapping("/sub-categories")
+    public ResponseEntity<Map<String, Object>> createSubCategory(@Valid @RequestBody CreateSubCategoryDTO dto) {
+        try {
+            SubCategoryDTO subCategory = adminService.createSubCategory(dto);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("subCategory", subCategory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PutMapping("/sub-categories/{id}")
+    public ResponseEntity<Map<String, Object>> updateSubCategory(@PathVariable Long id, @Valid @RequestBody CreateSubCategoryDTO dto) {
+        try {
+            SubCategoryDTO subCategory = adminService.updateSubCategory(id, dto);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("subCategory", subCategory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @DeleteMapping("/sub-categories/{id}")
+    public ResponseEntity<Map<String, Object>> deleteSubCategory(@PathVariable Long id) {
+        try {
+            adminService.deleteSubCategory(id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Sub Category deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     // Category Management
     @PostMapping("/categories")
     public ResponseEntity<Map<String, Object>> createCategory(@Valid @RequestBody CreateCategoryDTO dto) {
         try {
-            ProductCategoryDTO category = adminService.createCategory(dto);
+            CategoryDTO category = adminService.createCategory(dto);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("category", category);
@@ -203,7 +257,7 @@ public class AdminController {
     @PutMapping("/categories/{id}")
     public ResponseEntity<Map<String, Object>> updateCategory(@PathVariable Long id, @Valid @RequestBody CreateCategoryDTO dto) {
         try {
-            ProductCategoryDTO category = adminService.updateCategory(id, dto);
+            CategoryDTO category = adminService.updateCategory(id, dto);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("category", category);
@@ -248,13 +302,31 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllBrands());
     }
 
+    @GetMapping("/sub-categories")
+    public ResponseEntity<List<SubCategoryDTO>> getAllSubCategories() {
+        return ResponseEntity.ok(adminService.getAllSubCategories());
+    }
+
     @GetMapping("/categories")
-    public ResponseEntity<List<ProductCategoryDTO>> getAllCategories() {
+    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         return ResponseEntity.ok(adminService.getAllCategories());
     }
 
-    @GetMapping("/services")
-    public ResponseEntity<List<ServiceDTO>> getAllServices() {
-        return ResponseEntity.ok(adminService.getAllServices());
+    // Image Upload
+    @PostMapping("/upload-image")
+    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam MultipartFile file) {
+        try {
+            System.out.println("Uploading image: " + file.getOriginalFilename());
+            String imageUrl = fileUploadService.uploadFile(file);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("imageUrl", imageUrl);
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Failed to upload image: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

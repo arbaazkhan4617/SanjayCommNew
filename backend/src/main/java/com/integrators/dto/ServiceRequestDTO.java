@@ -6,10 +6,10 @@ public class ServiceRequestDTO {
     private Long id;
     private Long userId;
     private String userName;
-    private Long serviceId;
-    private String serviceName;
     private Long categoryId;
     private String categoryName;
+    private Long subCategoryId;
+    private String subCategoryName;
     private String subject;
     private String description;
     private String contactName;
@@ -24,14 +24,14 @@ public class ServiceRequestDTO {
     public ServiceRequestDTO() {
     }
 
-    public ServiceRequestDTO(Long id, Long userId, String userName, Long serviceId, String serviceName, Long categoryId, String categoryName, String subject, String description, String contactName, String contactPhone, String contactEmail, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ServiceRequestDTO(Long id, Long userId, String userName, Long categoryId, String categoryName, Long subCategoryId, String subCategoryName, String subject, String description, String contactName, String contactPhone, String contactEmail, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
-        this.serviceId = serviceId;
-        this.serviceName = serviceName;
         this.categoryId = categoryId;
         this.categoryName = categoryName;
+        this.subCategoryId = subCategoryId;
+        this.subCategoryName = subCategoryName;
         this.subject = subject;
         this.description = description;
         this.contactName = contactName;
@@ -68,22 +68,6 @@ public class ServiceRequestDTO {
         this.userName = userName;
     }
 
-    public Long getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(Long serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
-
     public Long getCategoryId() {
         return categoryId;
     }
@@ -98,6 +82,22 @@ public class ServiceRequestDTO {
 
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
+    }
+
+    public Long getSubCategoryId() {
+        return subCategoryId;
+    }
+
+    public void setSubCategoryId(Long subCategoryId) {
+        this.subCategoryId = subCategoryId;
+    }
+
+    public String getSubCategoryName() {
+        return subCategoryName;
+    }
+
+    public void setSubCategoryName(String subCategoryName) {
+        this.subCategoryName = subCategoryName;
     }
 
     public String getSubject() {

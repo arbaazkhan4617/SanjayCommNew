@@ -1,12 +1,12 @@
 package com.integrators.repository;
 
-import com.integrators.entity.Service;
+import com.integrators.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface ServiceRepository extends JpaRepository<Service, Long> {
-    Optional<Service> findByName(String name);
+public interface CategoryRepository extends JpaRepository<Category, Long> {
+    Optional<Category> findByName(String name);
 }
