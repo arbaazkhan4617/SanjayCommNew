@@ -32,6 +32,21 @@ Railway automatically provides:
 
 You need to set:
 - `SPRING_PROFILES_ACTIVE=prod`
+- `IMAGE_SERVICE_URL` (optional) - Base URL of your Railway image-service, e.g. `https://image-service-production-xxxx.up.railway.app`. When set, product/model image uploads are forwarded here instead of local storage.
+- `IMAGE_SERVICE_UPLOAD_PATH` (optional) - Upload path on image-service, default `/upload`
+
+## Image Service (Railway)
+
+If you deploy a separate **image-service** on Railway:
+
+1. Set `IMAGE_SERVICE_URL` on your **integrators-backend** service to the image-service base URL (e.g. `https://image-service-production-xxxx.up.railway.app`).
+2. Your image-service must expose an upload endpoint that:
+   - **Method**: `POST`
+   - **Path**: `/upload` (or set `IMAGE_SERVICE_UPLOAD_PATH`)
+   - **Content-Type**: `multipart/form-data` with field name `file`
+   - **Response**: JSON with either `"url"` or `"imageUrl"` containing the public URL of the uploaded image, e.g. `{ "imageUrl": "https://..." }` or `{ "url": "https://..." }`
+
+When `IMAGE_SERVICE_URL` is set, the backend forwards all image uploads to this service and returns the URL from the response. When not set, images are saved locally under `uploads/`.
 
 ## Build Configuration
 
