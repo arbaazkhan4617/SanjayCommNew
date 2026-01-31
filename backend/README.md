@@ -73,19 +73,27 @@ The application uses a hierarchical structure:
    - Use `application-dev.properties` profile
    - H2 runs in-memory, no setup needed
 
-3. **Build the project**
+3. **Optional: Use Railway image-service for uploads (local and prod)**  
+   To store images on your Railway image-service when running locally, set:
+   ```bash
+   export IMAGE_SERVICE_URL=https://your-image-service.up.railway.app
+   # optional: export IMAGE_SERVICE_UPLOAD_PATH=/upload
+   ```
+   Then run the app. If unset, images are saved to the local `uploads/` folder.
+
+4. **Build the project**
    ```bash
    mvn clean install
    ```
 
-4. **Run the application**
+5. **Run the application**
    ```bash
    mvn spring-boot:run
    ```
    
    Or run `IntegratorsApplication.java` from your IDE
 
-5. **Access the API**
+6. **Access the API**
    - API Base URL: `http://localhost:8080/api`
    - H2 Console (dev): `http://localhost:8080/h2-console`
 

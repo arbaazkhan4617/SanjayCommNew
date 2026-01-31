@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../utils/apiConfig';
 
@@ -182,26 +183,30 @@ export const adminAPI = {
       fileUri = `file://${fileUri}`;
     }
     
-    // Create FormData - in React Native, FormData.append for files needs specific structure
+    // Create FormData
     const formData = new FormData();
-    
-    // For React Native, the file object must be a plain object with uri, type, and name
-    // The field name must match what backend expects: 'file'
-    // IMPORTANT: The object structure must be exactly: { uri, type, name }
-    const fileObject = {
-      uri: fileUri,
-      type: mimeType,
-      name: fileName,
-    };
-    
-    console.log('FormData file object:', fileObject);
+
+    // On WEB: FormData requires a File/Blob - { uri, type, name } does NOT work
+    // On iOS/Android: React Native expects { uri, type, name }
+    if (Platform.OS === 'web') {
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: mimeType });
+      formData.append('file', file);
+    } else {
+      const fileObject = {
+        uri: fileUri,
+        type: mimeType,
+        name: fileName,
+      };
+      formData.append('file', fileObject);
+    }
+
+    console.log('FormData file object:', Platform.OS === 'web' ? 'File (web)' : { uri: fileUri, type: mimeType, name: fileName });
     console.log('File URI:', fileUri);
     console.log('MIME type:', mimeType);
     console.log('File name:', fileName);
     console.log('Sending to:', `${API_BASE_URL}/admin/upload-image`);
-    
-    // Append file to FormData with exact field name 'file'
-    formData.append('file', fileObject);
     
     // Debug: Log FormData (note: FormData doesn't serialize well, but we can check structure)
     console.log('FormData created successfully');
@@ -229,15 +234,16 @@ export const adminAPI = {
         // Don't set default Content-Type - axios will set it for FormData
       });
       
-      // Add headers
+      // Add headers - never set Content-Type for FormData so boundary is set correctly
       const config = {
         headers: {
           ...headers,
-          // Explicitly do NOT set Content-Type - axios will set multipart/form-data with boundary
         },
-        // Transform request to ensure FormData is sent correctly
-        transformRequest: (data) => {
-          // Return FormData as-is
+        // Don't set Content-Type so React Native sets multipart boundary; return FormData as-is
+        transformRequest: (data, headers) => {
+          if (data instanceof FormData) {
+            delete headers['Content-Type'];
+          }
           return data;
         },
         onUploadProgress: (progressEvent) => {
@@ -254,7 +260,7 @@ export const adminAPI = {
         type: mimeType,
         name: fileName,
       });
-      
+
       const response = await uploadApi.post('/admin/upload-image', formData, config);
       
       console.log('Upload response:', response.data);

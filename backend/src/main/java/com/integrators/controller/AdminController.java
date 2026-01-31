@@ -3,6 +3,8 @@ package com.integrators.controller;
 import com.integrators.dto.*;
 import com.integrators.service.AdminService;
 import com.integrators.service.FileUploadService;
+
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -312,21 +314,32 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllCategories());
     }
 
-    // Image Upload
-    @PostMapping("/upload-image")
-    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam MultipartFile file) {
+    // Image Upload (use @RequestParam for better compatibility with React Native FormData)
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
         try {
+            if (file == null || file.isEmpty()) {
+                response.put("success", false);
+                response.put("error", "File is empty or missing");
+                return ResponseEntity.badRequest().body(response);
+            }
+    
             System.out.println("Uploading image: " + file.getOriginalFilename());
+            System.out.println("Content-Type: " + file.getContentType());
+            System.out.println("Size: " + file.getSize());
+    
             String imageUrl = fileUploadService.uploadFile(file);
-            Map<String, Object> response = new HashMap<>();
+    
             response.put("success", true);
             response.put("imageUrl", imageUrl);
             return ResponseEntity.ok(response);
-        } catch (IOException e) {
-            Map<String, Object> response = new HashMap<>();
+    
+        } catch (Exception e) {
+            e.printStackTrace(); // 🔥 THIS WILL SHOW THE REAL ERROR
             response.put("success", false);
-            response.put("error", "Failed to upload image: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 }
