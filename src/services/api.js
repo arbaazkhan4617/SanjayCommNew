@@ -81,7 +81,13 @@ export const productAPI = {
   getProductByModel: (modelId) => 
     api.get(`/products/models/${modelId}/product`),
   searchProducts: (query) => api.get('/products/search', { params: { q: query } }),
-  getAllProducts: () => api.get('/products'),
+  getAllProducts: (params = {}) =>
+    api.get('/products', { params: { page: params.page ?? 0, size: params.size ?? 8 } }),
+  getNewArrivals: (size = 4) => api.get('/products/new-arrivals', { params: { size } }),
+  getPopular: (size = 4) => api.get('/products/popular', { params: { size } }),
+  getDeals: (params = {}) =>
+    api.get('/products/deals', { params: { page: params.page ?? 0, size: params.size ?? 8 } }),
+  recordProductView: (modelId) => api.post(`/products/models/${modelId}/view`),
 };
 
 export const cartAPI = {
@@ -110,13 +116,29 @@ export const orderAPI = {
 
 export const serviceRequestAPI = {
   getUserServiceRequests: (userId) => api.get(`/service-requests/${userId}`),
-  getServiceRequestById: (userId, requestId) => 
+  getServiceRequestById: (userId, requestId) =>
     api.get(`/service-requests/${userId}/${requestId}`),
   createServiceRequest: (data) => api.post('/service-requests/create', data),
-  updateServiceRequestStatus: (requestId, status) => 
-    api.put(`/service-requests/${requestId}/status`, null, { 
-      params: { status } 
+  updateServiceRequestStatus: (requestId, status) =>
+    api.put(`/service-requests/${requestId}/status`, null, {
+      params: { status }
     }),
+};
+
+export const wishlistAPI = {
+  getWishlist: (userId) => api.get(`/wishlist/${userId}`),
+  add: (userId, productId) => api.post(`/wishlist/${userId}/add`, null, { params: { productId } }),
+  remove: (userId, productId) => api.delete(`/wishlist/${userId}/remove`, { params: { productId } }),
+  contains: (userId, productId) => api.get(`/wishlist/${userId}/contains`, { params: { productId } }),
+};
+
+export const notificationAPI = {
+  getNotifications: (userId, params = {}) =>
+    api.get(`/notifications/${userId}`, { params: { page: params.page ?? 0, size: params.size ?? 20 } }),
+  getUnreadCount: (userId) => api.get(`/notifications/${userId}/unread-count`),
+  markAsRead: (notificationId, userId) =>
+    api.put(`/notifications/${notificationId}/read`, null, { params: { userId } }),
+  markAllAsRead: (userId) => api.put(`/notifications/${userId}/read-all`),
 };
 
 export const salesAPI = {
@@ -133,6 +155,7 @@ export const salesAPI = {
 
 export const adminAPI = {
   login: (email, password) => api.post('/auth/admin/login', { email, password }),
+  getUsers: () => api.get('/admin/users'),
   // Image Upload
   uploadImage: async (asset) => {
     console.log('Uploading image asset:', asset);
@@ -283,8 +306,9 @@ export const adminAPI = {
       throw uploadError;
     }
   },
-  // Products
-  getAllProducts: () => api.get('/admin/products'),
+  // Products (paginated; use response.data.content, response.data.totalElements, response.data.totalPages)
+  getAllProducts: (params = {}) =>
+    api.get('/admin/products', { params: { page: params.page ?? 0, size: params.size ?? 8 } }),
   getProductById: (id) => api.get(`/admin/products/${id}`),
   createProduct: (data) => api.post('/admin/products', data),
   updateProduct: (id, data) => api.put(`/admin/products/${id}`, data),

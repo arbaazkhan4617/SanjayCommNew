@@ -3,7 +3,12 @@ package com.integrators.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.integrators.dto.BrandDTO;
 import com.integrators.dto.ModelDTO;
@@ -62,6 +67,11 @@ public class ProductService {
 				.collect(Collectors.toList());
 	}
 
+	public Product getProductEntityById(Long productId) {
+		return productRepository.findById(productId)
+				.orElseThrow(() -> new RuntimeException("Product not found"));
+	}
+
 	public ProductResponseDTO getProductByModelId(Long modelId) {
 		Product product = productRepository.findByModelId(modelId)
 				.orElseThrow(() -> new RuntimeException("Product not found"));
@@ -73,8 +83,30 @@ public class ProductService {
 				.collect(Collectors.toList());
 	}
 
-	public List<ProductResponseDTO> getAllProducts() {
-		return productRepository.findAll().stream().map(this::convertToProductResponseDTO).collect(Collectors.toList());
+	public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
+		return productRepository.findAll(pageable).map(this::convertToProductResponseDTO);
+	}
+
+	public List<ProductResponseDTO> getNewArrivals(int size) {
+		Pageable page = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "id"));
+		return productRepository.findAll(page).stream().map(this::convertToProductResponseDTO).collect(Collectors.toList());
+	}
+
+	public List<ProductResponseDTO> getPopular(int size) {
+		Pageable page = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "viewCount"));
+		return productRepository.findAll(page).stream().map(this::convertToProductResponseDTO).collect(Collectors.toList());
+	}
+
+	public Page<ProductResponseDTO> getDeals(Pageable pageable) {
+		return productRepository.findDeals(pageable).map(this::convertToProductResponseDTO);
+	}
+
+	@Transactional
+	public void incrementViewCountByModelId(Long modelId) {
+		productRepository.findByModelId(modelId).ifPresent(p -> {
+			p.setViewCount(p.getViewCount() + 1);
+			productRepository.save(p);
+		});
 	}
 
 	// Conversion methods

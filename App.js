@@ -40,10 +40,14 @@ import AddEditProductScreen from './src/screens/AddEditProductScreen';
 import CategoryManagementScreen from './src/screens/CategoryManagementScreen';
 import SubCategoryManagementScreen from './src/screens/SubCategoryManagementScreen';
 import BrandManagementScreen from './src/screens/BrandManagementScreen';
+import UsersScreen from './src/screens/UsersScreen';
+import MyRequestsScreen from './src/screens/MyRequestsScreen';
+import WishlistScreen from './src/screens/WishlistScreen';
 
 // Context
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
+import { WishlistProvider } from './src/context/WishlistContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -63,6 +67,8 @@ function HomeStack() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="ServiceRequest" component={ServiceRequestScreen} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
   );
 }
@@ -82,6 +88,8 @@ function ProductsStack() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="ServiceRequest" component={ServiceRequestScreen} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
   );
 }
@@ -99,6 +107,8 @@ function CartStack() {
       <Stack.Screen name="Models" component={ModelsScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
     </Stack.Navigator>
   );
 }
@@ -115,6 +125,8 @@ function ProfileStack() {
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
+      <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Products" component={ProductsScreen} />
       <Stack.Screen name="Categories" component={CategoriesScreen} />
       <Stack.Screen name="SubCategories" component={SubCategoriesScreen} />
@@ -203,6 +215,7 @@ function AdminStack() {
       <Stack.Screen name="CategoryManagement" component={CategoryManagementScreen} />
       <Stack.Screen name="SubCategoryManagement" component={SubCategoryManagementScreen} />
       <Stack.Screen name="BrandManagement" component={BrandManagementScreen} />
+      <Stack.Screen name="Users" component={UsersScreen} />
     </Stack.Navigator>
   );
 }
@@ -333,9 +346,11 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <CartProvider>
-          <AppNavigator />
-          <StatusBar style="auto" />
-          <Toast />
+          <WishlistProvider>
+            <AppNavigator />
+            <StatusBar style="auto" />
+            <Toast />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </SafeAreaProvider>

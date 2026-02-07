@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,15 @@ import {
   TextInput,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import { COLORS } from '../utils/constants';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { serviceRequestAPI } from '../services/api';
+import { serviceRequestAPI, productAPI } from '../services/api';
 import Toast from 'react-native-toast-message';
+import { RECENTLY_VIEWED_KEY, MAX_RECENT } from './HomeScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -28,6 +30,36 @@ const ProductDetailScreen = () => {
   const { user } = useAuth();
   const product = route.params?.product || {};
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    const recordViewAndRecent = async () => {
+      try {
+        if (product.model?.id) {
+          productAPI.recordProductView(product.model.id).catch(() => {});
+        }
+        const minimal = {
+          id: product.id,
+          name: product.name,
+          image: product.image || product.images?.[0],
+          price: product.price,
+          originalPrice: product.originalPrice,
+          model: product.model,
+          category: product.category,
+          brand: product.brand,
+          subCategory: product.subCategory,
+          inStock: product.inStock,
+          rating: product.rating,
+          reviews: product.reviews,
+        };
+        const raw = await AsyncStorage.getItem(RECENTLY_VIEWED_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        const next = [minimal, ...(Array.isArray(list) ? list.filter((p) => p.id !== product.id) : [])].slice(0, MAX_RECENT);
+        await AsyncStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
+      } catch (e) {}
+    };
+    recordViewAndRecent();
+  }, [product?.id]);
   const [showQuickNav, setShowQuickNav] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState(null);

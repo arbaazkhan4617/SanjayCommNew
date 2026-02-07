@@ -19,6 +19,8 @@ import { COLORS } from '../utils/constants';
 import { adminAPI } from '../services/api';
 import Toast from 'react-native-toast-message';
 
+const PAGE_SIZE = 8;
+
 const ProductManagementScreen = () => {
   const navigation = useNavigation();
   const [products, setProducts] = useState([]);
@@ -26,16 +28,22 @@ const ProductManagementScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
-    loadProducts();
-  }, []);
+    loadProducts(page);
+  }, [page]);
 
-  const loadProducts = async () => {
+  const loadProducts = async (pageNum = 0) => {
     try {
       setLoading(true);
-      const response = await adminAPI.getAllProducts();
-      setProducts(response.data || []);
+      const response = await adminAPI.getAllProducts({ page: pageNum, size: PAGE_SIZE });
+      const data = response.data;
+      setProducts(data?.content ?? []);
+      setTotalPages(data?.totalPages ?? 0);
+      setTotalElements(data?.totalElements ?? 0);
     } catch (error) {
       console.error('Error loading products:', error);
       Toast.show({
@@ -68,7 +76,7 @@ const ProductManagementScreen = () => {
         text1: 'Success',
         text2: 'Product deleted successfully',
       });
-      await loadProducts();
+      await loadProducts(page);
       setProductToDelete(null);
     } catch (error) {
       console.error('Delete product error:', error);
@@ -174,7 +182,9 @@ const ProductManagementScreen = () => {
       </View>
       <View style={styles.headerActions}>
         <Text style={styles.productCount}>
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
+          {totalElements > 0
+            ? `${filteredProducts.length} of ${totalElements} (page ${page + 1}/${totalPages || 1})`
+            : `${filteredProducts.length} Products`}
         </Text>
         <TouchableOpacity
           style={styles.addButton}
@@ -200,6 +210,35 @@ const ProductManagementScreen = () => {
               <Text style={styles.emptyButtonText}>Add Your First Product</Text>
             </TouchableOpacity>
           </View>
+        }
+        ListFooterComponent={
+          totalPages > 1 ? (
+            <View style={styles.paginationRow}>
+              <TouchableOpacity
+                style={[styles.paginationButton, page <= 0 && styles.paginationButtonDisabled]}
+                onPress={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page <= 0}
+              >
+                <Ionicons name="chevron-back" size={20} color={page <= 0 ? COLORS.textLight : COLORS.primary} />
+                <Text style={[styles.paginationButtonText, page <= 0 && styles.paginationButtonTextDisabled]}>
+                  Previous
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.paginationInfo}>
+                Page {page + 1} of {totalPages}
+              </Text>
+              <TouchableOpacity
+                style={[styles.paginationButton, page >= totalPages - 1 && styles.paginationButtonDisabled]}
+                onPress={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+              >
+                <Text style={[styles.paginationButtonText, page >= totalPages - 1 && styles.paginationButtonTextDisabled]}>
+                  Next
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color={page >= totalPages - 1 ? COLORS.textLight : COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+          ) : null
         }
       />
 
@@ -299,6 +338,38 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.5,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  paginationButtonTextDisabled: {
+    color: COLORS.textLight,
+  },
+  paginationInfo: {
+    fontSize: 14,
+    color: COLORS.textLight,
   },
   productCard: {
     flexDirection: 'row',

@@ -39,8 +39,8 @@ const ProductsScreen = () => {
   const loadAllProducts = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getAllProducts();
-      setProducts(response.data);
+      const response = await productAPI.getAllProducts({ page: 0, size: 100 });
+      setProducts(response.data?.content ?? []);
     } catch (error) {
       console.error('Error loading all products:', error);
       setProducts([]);

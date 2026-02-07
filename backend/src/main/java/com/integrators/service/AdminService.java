@@ -3,6 +3,8 @@ package com.integrators.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,10 +134,9 @@ public class AdminService {
         return productService.convertToProductResponseDTO(product);
     }
 
-    public List<ProductResponseDTO> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(productService::convertToProductResponseDTO)
-                .collect(Collectors.toList());
+    public Page<ProductResponseDTO> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable)
+                .map(productService::convertToProductResponseDTO);
     }
 
     // Model CRUD

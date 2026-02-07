@@ -1,16 +1,21 @@
 package com.integrators.controller;
 
 import com.integrators.dto.*;
+import com.integrators.entity.User;
+import com.integrators.repository.UserRepository;
 import com.integrators.service.AdminService;
 import com.integrators.service.FileUploadService;
+import com.integrators.service.NotificationService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +26,38 @@ import java.util.Map;
 public class AdminController {
     private final AdminService adminService;
     private final FileUploadService fileUploadService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
-    public AdminController(AdminService adminService, FileUploadService fileUploadService) {
+    public AdminController(AdminService adminService, FileUploadService fileUploadService, NotificationService notificationService, UserRepository userRepository) {
         this.adminService = adminService;
         this.fileUploadService = fileUploadService;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<Map<String, Object>> getAllUsers() {
+        try {
+            List<UserListDTO> users = userRepository.findAll().stream()
+                    .map(u -> new UserListDTO(
+                            u.getId(),
+                            u.getName(),
+                            u.getEmail(),
+                            u.getPhone(),
+                            u.getRole()
+                    ))
+                    .toList();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("users", users);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // Product Management
@@ -288,10 +321,11 @@ public class AdminController {
         }
     }
 
-    // Get all for management
+    // Get all for management (paginated)
     @GetMapping("/products")
-    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-        return ResponseEntity.ok(adminService.getAllProducts());
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
+            @PageableDefault(size = 8, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(adminService.getAllProducts(pageable));
     }
 
     @GetMapping("/models")
@@ -312,6 +346,27 @@ public class AdminController {
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         return ResponseEntity.ok(adminService.getAllCategories());
+    }
+
+    // Create notification for user (e.g. "Your quotation for Product X is ready")
+    @PostMapping("/notifications")
+    public ResponseEntity<Map<String, Object>> createNotification(@RequestBody Map<String, Object> body) {
+        try {
+            Long userId = Long.valueOf(body.get("userId").toString());
+            String title = (String) body.getOrDefault("title", "Notification");
+            String notificationBody = (String) body.getOrDefault("body", "");
+            String type = (String) body.getOrDefault("type", "INFO");
+            var dto = notificationService.createForUser(userId, title, notificationBody, type);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("notification", dto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // Image Upload (use @RequestParam for better compatibility with React Native FormData)

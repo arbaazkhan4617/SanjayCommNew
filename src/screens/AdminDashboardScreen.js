@@ -59,7 +59,7 @@ const AdminDashboardScreen = () => {
       ]);
 
       setStats({
-        totalProducts: productsRes.data?.length || 0,
+        totalProducts: productsRes.data?.totalElements ?? 0,
         totalCategories: categoriesRes.data?.length || 0,
         totalSubCategories: subCategoriesRes.data?.length || 0,
         totalBrands: brandsRes.data?.length || 0,
@@ -252,6 +252,20 @@ const AdminDashboardScreen = () => {
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Manage Brands</Text>
               <Text style={styles.actionSubtitle}>Add or edit brands</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => navigation.navigate('Users')}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="people" size={24} color={COLORS.primary} />
+            </View>
+            <View style={styles.actionContent}>
+              <Text style={styles.actionTitle}>Registered Users</Text>
+              <Text style={styles.actionSubtitle}>View all users registered with the app</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={COLORS.textLight} />
           </TouchableOpacity>

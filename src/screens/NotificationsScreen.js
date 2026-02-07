@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/Header';
 import { COLORS } from '../utils/constants';
+import { useAuth } from '../context/AuthContext';
+import { notificationAPI } from '../services/api';
 
 const NotificationsScreen = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const [inbox, setInbox] = useState([]);
+  const [inboxLoading, setInboxLoading] = useState(false);
   const [notifications, setNotifications] = useState({
     orderUpdates: true,
     serviceRequests: true,
@@ -24,6 +30,30 @@ const NotificationsScreen = () => {
     emailNotifications: true,
     smsNotifications: false,
   });
+
+  const loadInbox = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      setInboxLoading(true);
+      const res = await notificationAPI.getNotifications(user.id, { page: 0, size: 30 });
+      const content = res.data?.content ?? res.data ?? [];
+      setInbox(Array.isArray(content) ? content : []);
+    } catch {
+      setInbox([]);
+    } finally {
+      setInboxLoading(false);
+    }
+  }, [user?.id]);
+
+  useFocusEffect(useCallback(() => { loadInbox(); }, [loadInbox]));
+
+  const handleMarkAllRead = async () => {
+    if (!user?.id) return;
+    try {
+      await notificationAPI.markAllAsRead(user.id);
+      loadInbox();
+    } catch {}
+  };
 
   const handleToggle = (key) => {
     setNotifications({
@@ -62,6 +92,33 @@ const NotificationsScreen = () => {
     <View style={styles.container}>
       <Header title="Notifications" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {user && (
+          <View style={styles.inboxSection}>
+            <View style={styles.inboxHeader}>
+              <Text style={styles.groupTitle}>Inbox</Text>
+              {inbox.some((n) => !n.read) && (
+                <TouchableOpacity onPress={handleMarkAllRead}>
+                  <Text style={styles.seeAll}>Mark all read</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {inboxLoading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} style={{ padding: 16 }} />
+            ) : inbox.length === 0 ? (
+              <Text style={styles.inboxEmpty}>No notifications yet</Text>
+            ) : (
+              inbox.map((n) => (
+                <View key={n.id} style={[styles.inboxItem, !n.read && styles.inboxItemUnread]}>
+                  <Text style={styles.inboxTitle}>{n.title}</Text>
+                  {n.body ? <Text style={styles.inboxBody}>{n.body}</Text> : null}
+                  <Text style={styles.inboxDate}>
+                    {n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
         {notificationGroups.map((group, groupIndex) => (
           <View key={groupIndex} style={styles.group}>
             <Text style={styles.groupTitle}>{group.title}</Text>
@@ -160,6 +217,26 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     lineHeight: 20,
   },
+  seeAll: { fontSize: 14, color: COLORS.primary, fontWeight: '600' },
+  inboxSection: { marginTop: 8 },
+  inboxHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.border,
+  },
+  inboxItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  inboxItemUnread: { backgroundColor: 'rgba(255,107,53,0.06)' },
+  inboxTitle: { fontSize: 15, fontWeight: '600', color: COLORS.text },
+  inboxBody: { fontSize: 14, color: COLORS.textLight, marginTop: 4 },
+  inboxDate: { fontSize: 12, color: COLORS.textLight, marginTop: 6 },
+  inboxEmpty: { padding: 16, fontSize: 14, color: COLORS.textLight },
 });
 
 export default NotificationsScreen;

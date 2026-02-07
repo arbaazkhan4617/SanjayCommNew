@@ -46,6 +46,9 @@ public class Product {
 
 	private Integer reviews;
 
+	@Column(name = "view_count")
+	private Integer viewCount = 0;
+
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "model_id", nullable = false, unique = true)
 	private Model model;
@@ -122,6 +125,14 @@ public class Product {
 
 	public void setReviews(Integer reviews) {
 		this.reviews = reviews;
+	}
+
+	public Integer getViewCount() {
+		return viewCount != null ? viewCount : 0;
+	}
+
+	public void setViewCount(Integer viewCount) {
+		this.viewCount = viewCount != null ? viewCount : 0;
 	}
 
 	public Model getModel() {

@@ -89,6 +89,18 @@ const ProfileScreen = () => {
       onPress: () => navigation.navigate('Orders'),
     },
     {
+      id: '1b',
+      title: 'My Requests',
+      icon: 'document-text-outline',
+      onPress: () => navigation.navigate('MyRequests'),
+    },
+    {
+      id: '1c',
+      title: 'Wishlist',
+      icon: 'heart-outline',
+      onPress: () => navigation.navigate('Wishlist'),
+    },
+    {
       id: '2',
       title: 'Addresses',
       icon: 'location-outline',

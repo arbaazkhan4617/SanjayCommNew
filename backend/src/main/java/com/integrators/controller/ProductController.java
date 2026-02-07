@@ -2,6 +2,9 @@ package com.integrators.controller;
 
 import com.integrators.dto.*;
 import com.integrators.service.ProductService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,7 +56,32 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(
+            @PageableDefault(size = 8, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllProducts(pageable));
+    }
+
+    @GetMapping("/new-arrivals")
+    public ResponseEntity<List<ProductResponseDTO>> getNewArrivals(
+            @RequestParam(defaultValue = "4") int size) {
+        return ResponseEntity.ok(productService.getNewArrivals(size));
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<ProductResponseDTO>> getPopular(
+            @RequestParam(defaultValue = "4") int size) {
+        return ResponseEntity.ok(productService.getPopular(size));
+    }
+
+    @GetMapping("/deals")
+    public ResponseEntity<Page<ProductResponseDTO>> getDeals(
+            @PageableDefault(size = 8, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(productService.getDeals(pageable));
+    }
+
+    @PostMapping("/models/{modelId}/view")
+    public ResponseEntity<Void> recordProductView(@PathVariable Long modelId) {
+        productService.incrementViewCountByModelId(modelId);
+        return ResponseEntity.ok().build();
     }
 }
